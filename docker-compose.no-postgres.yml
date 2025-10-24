@@ -22,7 +22,7 @@ services:
   # Backend API
   backend:
     build:
-      context: .
+      context: ..
       dockerfile: docker/Dockerfile.backend
     container_name: kpi-backend-dev
     environment:
@@ -37,8 +37,6 @@ services:
     ports:
       - "8000:3000"
     depends_on:
-      # postgres:
-      #   condition: service_healthy
       redis:
         condition: service_healthy
     networks:
@@ -48,7 +46,7 @@ services:
       - ../backend:/app
       - /app/node_modules
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -60,47 +58,16 @@ services:
       dockerfile: docker/Dockerfile.frontend
     container_name: kpi-frontend-dev
     ports:
-      - "8080:80"
+      - "5173:80"
     depends_on:
-      backend:
-        condition: service_healthy
+      - backend
     networks:
       - kpi-network
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  # Data Ingestion Service
-  # ingestion:
-  #   build:
-  #     context: ..
-  #     dockerfile: docker/Dockerfile.ingestion
-  #   container_name: kpi-ingestion-dev
-  #   environment:
-  #     - DATABASE_URL=postgresql://dashboard_user:${DB_PASSWORD:-your_password}@postgres:5432/mmtg_dashboard
-  #   depends_on:
-  #     postgres:
-  #       condition: service_healthy
-  #   networks:
-  #     - kpi-network
-  #   restart: unless-stopped
-  #   volumes:
-  #     - ../ingestion:/app
-  #   healthcheck:
-  #     test: ["CMD", "python", "-c", "import sys; sys.exit(0)"]
-  #     interval: 30s
-  #     timeout: 10s
-  #     retries: 3
-
-volumes:
-  postgres_data_dev:
-    driver: local
-  redis_data_dev:
-    driver: local
 
 networks:
   kpi-network:
     driver: bridge
+
+volumes:
+  redis_data_dev:
