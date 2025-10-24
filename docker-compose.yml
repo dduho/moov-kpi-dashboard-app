@@ -1,9 +1,29 @@
-version: '3.8'
-
 services:
+  # PostgreSQL Database
+  postgres:
+    image: public.ecr.aws/docker/library/postgres:15-alpine   # <-- miroir officiel
+    container_name: kpi-postgres-dev
+    environment:
+      POSTGRES_DB: mmtg_dashboard
+      POSTGRES_USER: dashboard_user
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-your_password}
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "5432:5432"
+    networks:
+      - kpi-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dashboard_user -d mmtg_dashboard -h localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
   # Redis Cache
   redis:
-    image: redis:7-alpine
+    image: public.ecr.aws/docker/library/redis:7-alpine       # <-- miroir officiel
     container_name: kpi-redis-dev
     command: redis-server --appendonly yes
     volumes:
@@ -37,8 +57,8 @@ services:
     ports:
       - "8000:3000"
     depends_on:
-      # postgres:
-      #   condition: service_healthy
+      postgres:
+        condition: service_healthy
       redis:
         condition: service_healthy
     networks:
@@ -48,7 +68,8 @@ services:
       - ../backend:/app
       - /app/node_modules
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      # ⚠️ Vérifie le port INTERNE (3000), pas le port host 8000
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -72,28 +93,6 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-
-  # Data Ingestion Service
-  # ingestion:
-  #   build:
-  #     context: ..
-  #     dockerfile: docker/Dockerfile.ingestion
-  #   container_name: kpi-ingestion-dev
-  #   environment:
-  #     - DATABASE_URL=postgresql://dashboard_user:${DB_PASSWORD:-your_password}@postgres:5432/mmtg_dashboard
-  #   depends_on:
-  #     postgres:
-  #       condition: service_healthy
-  #   networks:
-  #     - kpi-network
-  #   restart: unless-stopped
-  #   volumes:
-  #     - ../ingestion:/app
-  #   healthcheck:
-  #     test: ["CMD", "python", "-c", "import sys; sys.exit(0)"]
-  #     interval: 30s
-  #     timeout: 10s
-  #     retries: 3
 
 volumes:
   postgres_data_dev:
