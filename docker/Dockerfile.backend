@@ -1,6 +1,9 @@
 # Backend Dockerfile
 FROM node:18-alpine
 
+# Install required utilities for health checks
+RUN apk add --no-cache wget
+
 # Set working directory
 WORKDIR /app
 
@@ -12,17 +15,16 @@ RUN npm ci --only=production
 
 # Copy source code
 COPY backend/src ./src
-COPY backend/.env* ./
 
-# Create logs directory
-RUN mkdir -p logs
+# Create logs and temp directories
+RUN mkdir -p logs temp
 
 # Expose port
 EXPOSE 3000
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:3000/api/health || exit 1
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1
 
 # Start the application
 CMD ["npm", "start"]
