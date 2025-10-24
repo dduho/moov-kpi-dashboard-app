@@ -1,0 +1,56 @@
+version: '3.8'
+
+# Simplified Docker Compose for starting only PostgreSQL and Redis
+# Useful for development when you want to run backend/frontend locally
+# Usage: docker-compose -f docker-compose.simple.yml up -d
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: kpi-postgres-dev
+    environment:
+      POSTGRES_DB: mmtg_dashboard
+      POSTGRES_USER: dashboard_user
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-your_password}
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - kpi-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dashboard_user -d mmtg_dashboard"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: kpi-redis-dev
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data_dev:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - kpi-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  postgres_data_dev:
+    driver: local
+  redis_data_dev:
+    driver: local
+
+networks:
+  kpi-network:
+    driver: bridge

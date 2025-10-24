@@ -26,14 +26,18 @@ services:
       dockerfile: docker/Dockerfile.backend
     container_name: kpi-backend-dev
     environment:
-      - DATABASE_URL=postgresql://dashboard_user:${DB_PASSWORD:-your_password}@postgres:5432/mmtg_dashboard
-      - REDIS_URL=redis://redis:6379
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=mmtg_dashboard
+      - DB_USER=dashboard_user
+      - DB_PASSWORD=${DB_PASSWORD:-your_password}
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_AVAILABLE=true
-      - SECRET_KEY=${SECRET_KEY:-your_secret_key}
-      - ALGORITHM=HS256
-      - ACCESS_TOKEN_EXPIRE_MINUTES=30
+      - API_PORT=3000
+      - JWT_SECRET=${SECRET_KEY:-your_secret_key}
+      - NODE_ENV=development
+      - CORS_ORIGIN=http://localhost:5173
     ports:
       - "8000:3000"
     depends_on:
@@ -45,20 +49,23 @@ services:
       - kpi-network
     restart: unless-stopped
     volumes:
-      - ../backend:/app
+      - ./backend:/app
       - /app/node_modules
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 40s
 
   # Frontend
   frontend:
     build:
-      context: ..
+      context: .
       dockerfile: docker/Dockerfile.frontend
     container_name: kpi-frontend-dev
+    environment:
+      - VITE_API_BASE_URL=http://localhost:3000/api
     ports:
       - "8080:80"
     depends_on:
