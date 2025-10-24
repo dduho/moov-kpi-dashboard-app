@@ -1,161 +1,174 @@
 <template>
-  <div class="kpi-card" :class="cardColorClass">
-    <div class="card-header">
-      <div class="icon">
-        {{ icon }}
-      </div>
-      <h4>{{ title }}</h4>
+  <div class="kpi-card" :class="`bg-pastel-${variant}`">
+    <!-- Icon Circle -->
+    <div :class="`icon-circle icon-${variant}`">
+      <component :is="iconComponent" class="w-6 h-6 text-white" />
     </div>
 
-    <div class="card-body">
-      <div class="main-value">{{ value }}</div>
+    <!-- Main Value -->
+    <div class="main-value">{{ value }}</div>
 
-      <div class="trend-indicator" :class="trendClass">
-        <span class="trend-icon">{{ trendIcon }}</span>
-        <span class="trend-value">{{ trendPercentage }}%</span>
-        <span class="trend-label">vs précédent</span>
-      </div>
-    </div>
+    <!-- Title -->
+    <div class="title">{{ title }}</div>
 
-    <div class="card-footer">
-      <span class="previous-value">Précédent: {{ previousValue }}</span>
+    <!-- Trend Indicator -->
+    <div class="trend-indicator" :class="trendClass">
+      <span class="trend-value">{{ trendIcon }}{{ Math.abs(trendPercentage) }}% from yesterday</span>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import { getChangeIndicator } from '@/utils/formatters'
+import { computed, h } from 'vue'
 
 const props = defineProps({
   title: String,
   value: [String, Number],
   previousValue: [String, Number],
   trend: [String, Number],
-  icon: String,
-  color: String
+  variant: {
+    type: String,
+    default: 'pink', // pink, orange, green, purple, blue, yellow
+    validator: (value) => ['pink', 'orange', 'green', 'purple', 'blue', 'yellow'].includes(value)
+  },
+  iconType: {
+    type: String,
+    default: 'sales' // sales, orders, products, customers
+  }
 })
 
 const trendPercentage = computed(() => {
-  return parseFloat(props.trend || 0).toFixed(2)
+  return parseFloat(props.trend || 0).toFixed(0)
 })
 
 const trendClass = computed(() => {
-  const trend = parseFloat(trendPercentage.value)
+  const trend = parseFloat(props.trend || 0)
   return trend > 0 ? 'positive' : trend < 0 ? 'negative' : 'neutral'
 })
 
 const trendIcon = computed(() => {
-  const trend = parseFloat(trendPercentage.value)
-  return getChangeIndicator(trend)
+  const trend = parseFloat(props.trend || 0)
+  return trend > 0 ? '↗' : trend < 0 ? '↘' : '→'
 })
 
-const cardColorClass = computed(() => {
-  if (props.color) return props.color
-  return ''
+// Icon components based on iconType
+const iconComponent = computed(() => {
+  const icons = {
+    sales: () => h('svg', { fill: 'currentColor', viewBox: '0 0 24 24' }, [
+      h('path', { d: 'M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z' })
+    ]),
+    orders: () => h('svg', { fill: 'currentColor', viewBox: '0 0 24 24' }, [
+      h('path', { d: 'M20 6h-2.18c.11-.31.18-.65.18-1 0-1.66-1.34-3-3-3-1.05 0-1.96.54-2.5 1.35l-.5.67-.5-.68C10.96 2.54 10.05 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-5-2c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zM9 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm11 15H4v-2h16v2zm0-5H4V8h5.08L7 10.83 8.62 12 11 8.76l1-1.36 1 1.36L15.38 12 17 10.83 14.92 8H20v6z' })
+    ]),
+    products: () => h('svg', { fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
+      h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M5 13l4 4L19 7' })
+    ]),
+    customers: () => h('svg', { fill: 'currentColor', viewBox: '0 0 24 24' }, [
+      h('path', { d: 'M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z' })
+    ])
+  }
+
+  return icons[props.iconType] || icons.sales
 })
 </script>
 
 <style scoped>
 .kpi-card {
-  background: white;
-  border-radius: 0.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  padding: 1.5rem;
-  transition: transform 0.2s, box-shadow 0.2s;
+  @apply rounded-2xl p-6 transition-all duration-200 hover:shadow-lg;
 }
 
-.kpi-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+/* Pastel background colors */
+.bg-pastel-pink {
+  background-color: #FFE2E5;
 }
 
-.card-header {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
+.bg-pastel-orange {
+  background-color: #FFF4DE;
 }
 
-.icon {
-  font-size: 1.5rem;
+.bg-pastel-green {
+  background-color: #DCFCE7;
 }
 
-.card-header h4 {
-  margin: 0;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #6b7280;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+.bg-pastel-purple {
+  background-color: #F3E8FF;
 }
 
-.card-body {
-  margin-bottom: 1rem;
+.bg-pastel-blue {
+  background-color: #E0F2FE;
 }
 
+.bg-pastel-yellow {
+  background-color: #FEF3C7;
+}
+
+/* Icon Circle */
+.icon-circle {
+  @apply w-12 h-12 rounded-full flex items-center justify-center mb-4;
+}
+
+.icon-pink {
+  background-color: #FA5A7D;
+}
+
+.icon-orange {
+  background-color: #FF947A;
+}
+
+.icon-green {
+  background-color: #3CD856;
+}
+
+.icon-purple {
+  background-color: #BF83FF;
+}
+
+.icon-blue {
+  background-color: #0EA5E9;
+}
+
+.icon-yellow {
+  background-color: #F59E0B;
+}
+
+/* Main Value */
 .main-value {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #1f2937;
-  margin-bottom: 0.5rem;
+  @apply text-3xl font-bold text-gray-900 mb-1;
 }
 
+/* Title */
+.title {
+  @apply text-sm font-medium text-gray-600 mb-2;
+}
+
+/* Trend Indicator */
 .trend-indicator {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  font-size: 0.875rem;
-  font-weight: 500;
+  @apply text-xs font-medium;
 }
 
 .trend-indicator.positive {
-  color: #16a34a;
+  @apply text-success-600;
 }
 
 .trend-indicator.negative {
-  color: #dc2626;
+  @apply text-error-600;
 }
 
 .trend-indicator.neutral {
-  color: #6b7280;
+  @apply text-gray-600;
 }
 
-.trend-label {
-  color: #9ca3af;
-  font-weight: 400;
-}
-
-.card-footer {
-  padding-top: 0.75rem;
-  border-top: 1px solid #e5e7eb;
-}
-
-.previous-value {
-  font-size: 0.75rem;
-  color: #9ca3af;
-}
-
-/* Color variants */
-.kpi-card.success {
-  border-left: 4px solid #16a34a;
-}
-
-.kpi-card.warning {
-  border-left: 4px solid #ca8a04;
-}
-
-.kpi-card.error {
-  border-left: 4px solid #dc2626;
+.trend-value {
+  @apply font-normal;
 }
 
 @media (max-width: 768px) {
   .kpi-card {
-    padding: 1rem;
+    @apply p-4;
   }
 
   .main-value {
-    font-size: 1.5rem;
+    @apply text-2xl;
   }
 }
 </style>

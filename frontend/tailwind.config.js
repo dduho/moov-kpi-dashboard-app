@@ -11,16 +11,16 @@ export default {
       },
       colors: {
         primary: {
-          50: '#eff6ff',
-          100: '#dbeafe',
-          200: '#bfdbfe',
-          300: '#93c5fd',
-          400: '#60a5fa',
-          500: '#3b82f6',
-          600: '#2563eb',
-          700: '#1d4ed8',
-          800: '#1e40af',
-          900: '#1e3a8a',
+          50: '#f5f5ff',
+          100: '#ebebff',
+          200: '#d6d6ff',
+          300: '#b8b8ff',
+          400: '#9a9aff',
+          500: '#5B5FED', // Main purple from Figma
+          600: '#4a4ed9',
+          700: '#3a3eb3',
+          800: '#2d3090',
+          900: '#1f2163',
         },
         success: {
           50: '#f0fdf4',
@@ -57,6 +57,26 @@ export default {
           700: '#b91c1c',
           800: '#991b1b',
           900: '#7f1d1d',
+        },
+        // Pastel colors for KPI cards (from Figma)
+        pastel: {
+          pink: '#FFE2E5',
+          orange: '#FFF4DE',
+          green: '#DCFCE7',
+          purple: '#F3E8FF',
+          blue: '#E0F2FE',
+          yellow: '#FEF3C7',
+        },
+        // Chart colors
+        chart: {
+          cyan: '#22D3EE',
+          teal: '#14B8A6',
+          green: '#10B981',
+          yellow: '#FBBF24',
+          orange: '#F97316',
+          pink: '#EC4899',
+          purple: '#A855F7',
+          indigo: '#6366F1',
         }
       }
     },

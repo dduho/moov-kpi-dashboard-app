@@ -1,100 +1,46 @@
 <template>
-  <v-app>
-    <v-app-bar app color="primary" dark>
-      <v-app-bar-nav-icon @click="drawer = !drawer"></v-app-bar-nav-icon>
-      <v-toolbar-title>Moov KPI Dashboard</v-toolbar-title>
-      <v-spacer></v-spacer>
-      <v-btn icon>
-        <v-icon>mdi-bell</v-icon>
-      </v-btn>
-      <v-btn icon>
-        <v-icon>mdi-account</v-icon>
-      </v-btn>
-    </v-app-bar>
+  <div class="app-container">
+    <!-- Sidebar -->
+    <Sidebar />
 
-    <v-navigation-drawer v-model="drawer" app>
-      <v-list>
-        <v-list-item to="/" exact>
-          <v-list-item-icon>
-            <v-icon>mdi-view-dashboard</v-icon>
-          </v-list-item-icon>
-          <v-list-item-content>
-            <v-list-item-title>Dashboard</v-list-item-title>
-          </v-list-item-content>
-        </v-list-item>
+    <!-- Main Content Area -->
+    <div class="main-content">
+      <!-- Header -->
+      <AppHeader />
 
-        <v-list-item to="/daily">
-          <v-list-item-icon>
-            <v-icon>mdi-calendar-today</v-icon>
-          </v-list-item-icon>
-          <v-list-item-content>
-            <v-list-item-title>Daily KPIs</v-list-item-title>
-          </v-list-item-content>
-        </v-list-item>
-
-        <v-list-item to="/hourly">
-          <v-list-item-icon>
-            <v-icon>mdi-clock-outline</v-icon>
-          </v-list-item-icon>
-          <v-list-item-content>
-            <v-list-item-title>Hourly KPIs</v-list-item-title>
-          </v-list-item-content>
-        </v-list-item>
-
-        <v-list-item to="/imt">
-          <v-list-item-icon>
-            <v-icon>mdi-cash-multiple</v-icon>
-          </v-list-item-icon>
-          <v-list-item-content>
-            <v-list-item-title>IMT Transactions</v-list-item-title>
-          </v-list-item-content>
-        </v-list-item>
-
-        <v-list-item to="/revenue">
-          <v-list-item-icon>
-            <v-icon>mdi-chart-line</v-icon>
-          </v-list-item-icon>
-          <v-list-item-content>
-            <v-list-item-title>Revenue</v-list-item-title>
-          </v-list-item-content>
-        </v-list-item>
-
-        <v-list-item to="/users">
-          <v-list-item-icon>
-            <v-icon>mdi-account-group</v-icon>
-          </v-list-item-icon>
-          <v-list-item-content>
-            <v-list-item-title>Active Users</v-list-item-title>
-          </v-list-item-content>
-        </v-list-item>
-
-        <v-list-item to="/reports">
-          <v-list-item-icon>
-            <v-icon>mdi-file-chart</v-icon>
-          </v-list-item-icon>
-          <v-list-item-content>
-            <v-list-item-title>Reports</v-list-item-title>
-          </v-list-item-content>
-        </v-list-item>
-      </v-list>
-    </v-navigation-drawer>
-
-    <v-main class="bg-grey-lighten-4">
-      <v-container fluid class="pa-6">
+      <!-- Page Content -->
+      <main class="content-wrapper">
         <router-view />
-      </v-container>
-    </v-main>
-  </v-app>
+      </main>
+    </div>
+  </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
-
-const drawer = ref(false)
+import Sidebar from '@/components/layout/Sidebar.vue'
+import AppHeader from '@/components/layout/AppHeader.vue'
 </script>
 
 <style scoped>
-.v-app-bar {
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+.app-container {
+  @apply flex min-h-screen bg-gray-50;
+}
+
+.main-content {
+  @apply flex-1 ml-64 transition-all duration-300;
+}
+
+.content-wrapper {
+  @apply p-8;
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    @apply ml-20;
+  }
+
+  .content-wrapper {
+    @apply p-4;
+  }
 }
 </style>
