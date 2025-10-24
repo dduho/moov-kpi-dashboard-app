@@ -36,6 +36,7 @@
     "vite-plugin-vuetify": "^2.1.0",
     "autoprefixer": "^10.4.20",
     "postcss": "^8.5.1",
+    "terser": "^5.36.0",
     "globals": "^15.12.0"
   }
 }

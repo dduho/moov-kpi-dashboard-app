@@ -65,7 +65,7 @@ services:
       - kpi-network
     restart: unless-stopped
     volumes:
-      - ../backend:/app
+      - ./backend:/app
       - /app/node_modules
     healthcheck:
       # ⚠️ Vérifie le port INTERNE (3000), pas le port host 8000
@@ -77,7 +77,7 @@ services:
   # Frontend
   frontend:
     build:
-      context: ..
+      context: .
       dockerfile: docker/Dockerfile.frontend
     container_name: kpi-frontend-dev
     ports:
