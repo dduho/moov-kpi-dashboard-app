@@ -181,6 +181,80 @@ YYYYMMDD.rar
 - **Racine :** `/Huawei/Kaly/KPI`
 - **Fichier exemple :** `/Huawei/Kaly/KPI/202508/20250801.rar`
 
+## Détails techniques : où sont stockés les fichiers FTP et comment ils sont traités
+
+Ce qui suit décrit précisément où les archives téléchargées depuis le FTP sont stockées temporairement, quel code les traite et comment les KPIs finissent dans le dashboard.
+
+- Emplacement temporaire (local au backend) : `backend/temp/`
+   - Le job d'ingestion crée des sous-dossiers par date (ex. `backend/temp/20250801/`) pour l'extraction.
+   - Après traitement, le pipeline supprime automatiquement l'archive et le dossier d'extraction (cleanup).
+
+- Service FTP : `backend/src/services/ftpService.js`
+   - Méthodes principales : `downloadFile(remoteFileName, localPath)`, `listFiles(remotePath)`, `fileExists(...)`.
+   - Configuration via `backend/.env` (variables `FTP_HOST`, `FTP_PORT`, `FTP_USER`, `FTP_PASSWORD`, `FTP_REMOTE_PATH`).
+
+- Job d'ingestion : `backend/src/jobs/dailyDataIngestion.js`
+   - Planifié (cron) pour s'exécuter quotidiennement (voir schedule dans le fichier, configuration actuelle dans le code).
+   - Étapes :
+      1. Cherche et télécharge l'archive (.rar ou .zip) depuis le FTP dans `backend/temp/<DATE>.rar`.
+      2. Détection du type d'archive et extraction (`node-unrar-js` pour RAR, `adm-zip` pour ZIP) vers `backend/temp/<DATE>/`.
+      3. Appelle `excelParserService.parseAllFiles(extractPath, date)` pour parser tous les fichiers Excel extraits.
+      4. Appelle `kpiCalculatorService.calculateDailyAggregates(date)` pour agréger les données et calculer les KPIs.
+      5. Vide le cache via `cacheService.clearAll()` et supprime les fichiers temporaires (cleanup).
+
+- Parser Excel : `backend/src/services/excelParserService.js`
+   - Utilise `exceljs` pour lire les fichiers Excel.
+   - Noms attendus (exemples) : `_MMTG_Daily_KPI_<date>.xlsx`, `_MMTG-Tools_Hourly_KPI_<date>.xlsx`, `_MMTG_IMT_Hourly_new-<date>.xlsx`, `_MMTG-Tools_Revenue_Compare_<date>.xlsx`.
+   - Pour chaque fichier, les données sont insérées dans les modèles Sequelize via `bulkCreate` :
+      - `DailyKpi`, `HourlyKpi`, `ImtTransaction`, `RevenueByChannel`, `ActiveUsers`.
+
+- Calcul des KPIs : `backend/src/services/kpiCalculatorService.js`
+   - Agrège les enregistrements bruts (lignes Excel) et calcule les métriques utilisées par le dashboard.
+   - Écrit certaines comparaisons via `KpiComparisons.bulkCreate` (si nécessaire).
+
+- API Dashboard : `backend/src/controllers/dashboardController.js`
+   - Assemble les différents jeux de données (DailyKpi, HourlyKpi, ImtTransaction, RevenueByChannel, ActiveUsers) et construit l'objet `dashboardData` renvoyé à `/api/dashboard`.
+   - Met en cache le résultat (ex : 5 minutes) via `cacheService`.
+
+### Commandes utiles pour vérifier et déboguer
+Exécute ces commandes depuis la racine du projet (ou je peux les exécuter pour toi si tu veux) :
+
+1. Lister le contenu du répertoire temporaire dans le conteneur backend :
+```powershell
+docker-compose exec backend ls -la /usr/src/app/temp || ls -la backend/temp
+```
+
+2. Lancer le test d'ingestion complet (simule pipeline complet) :
+```powershell
+docker-compose exec backend node test-data-ingestion.js
+```
+Remarque : si le FTP n'est pas accessible depuis ton environnement, l'étape de téléchargement échouera.
+
+3. Tester la connexion FTP et la lecture Excel (script de test present) :
+```powershell
+docker-compose exec backend node test-ftp-excel-verification.js
+```
+
+4. Vérifier le nombre d'enregistrements en base (exemple pour `DailyKpi`) :
+```powershell
+docker-compose exec backend node -e "const DailyKpi=require('./src/models/DailyKpi'); DailyKpi.count().then(c=>console.log('DailyKpi count:',c)).catch(e=>console.error(e));"
+```
+
+5. Suivre les logs du backend (utile pour voir l'exécution du job) :
+```powershell
+docker-compose logs -f backend
+```
+
+### Astuces pour le débogage
+- Si tu veux conserver les fichiers téléchargés pour inspection, commente ou désactive l'appel `this.cleanup(...)` dans `backend/src/jobs/dailyDataIngestion.js` avant d'exécuter un test.
+- Vérifie le fichier `backend/.env` pour t'assurer que les variables FTP sont correctes et que le conteneur backend peut atteindre l'IP/port (VPN, firewall interne peuvent bloquer l'accès).
+- Si la structure des fichiers Excel change, mets à jour `excelParserService.js` pour mapper correctement les colonnes/feuilles.
+
+Si tu veux, je peux :
+- lancer `test-ftp-excel-verification.js` maintenant pour diagnostiquer l'accès FTP (je l'ai déjà essayé auparavant et il a renvoyé un ECONNREFUSED depuis cet environnement),
+- ou bien exécuter un parsing local si tu me fournis une archive `.rar`/`.zip` à placer dans `backend/temp/`.
+
+
 ## Deployment
 
 ### Production Deployment
