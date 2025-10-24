@@ -1,28 +1,6 @@
 version: '3.8'
 
 services:
-  # PostgreSQL Database
-  postgres:
-    image: postgres:15-alpine
-    container_name: kpi-postgres-dev
-    environment:
-      POSTGRES_DB: mmtg_dashboard
-      POSTGRES_USER: dashboard_user
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-your_password}
-    volumes:
-      - postgres_data_dev:/var/lib/postgresql/data
-      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
-    ports:
-      - "5432:5432"
-    networks:
-      - kpi-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U dashboard_user -d mmtg_dashboard"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
   # Redis Cache
   redis:
     image: redis:7-alpine
@@ -61,10 +39,10 @@ services:
       - NODE_ENV=development
       - CORS_ORIGIN=http://localhost:5173
     ports:
-      - "3000:3000"
+      - "8000:3000"
     depends_on:
-      postgres:
-        condition: service_healthy
+      # postgres:
+      #   condition: service_healthy
       redis:
         condition: service_healthy
     networks:
@@ -97,11 +75,32 @@ services:
       - kpi-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost/ || exit 1"]
+      test: ["CMD", "curl", "-f", "http://localhost"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
+
+  # Data Ingestion Service
+  # ingestion:
+  #   build:
+  #     context: ..
+  #     dockerfile: docker/Dockerfile.ingestion
+  #   container_name: kpi-ingestion-dev
+  #   environment:
+  #     - DATABASE_URL=postgresql://dashboard_user:${DB_PASSWORD:-your_password}@postgres:5432/mmtg_dashboard
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #   networks:
+  #     - kpi-network
+  #   restart: unless-stopped
+  #   volumes:
+  #     - ../ingestion:/app
+  #   healthcheck:
+  #     test: ["CMD", "python", "-c", "import sys; sys.exit(0)"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
 
 volumes:
   postgres_data_dev:
