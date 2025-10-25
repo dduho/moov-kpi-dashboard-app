@@ -17,6 +17,7 @@ app.use(morgan('dev'))
 app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 200 }))
 
 // Routes
+app.use('/api/auth', require('./routes/auth'))
 app.use('/api/dashboard', require('./routes/dashboard'))
 app.use('/api/kpis', require('./routes/kpis'))
 app.use('/api/imt', require('./routes/imt'))

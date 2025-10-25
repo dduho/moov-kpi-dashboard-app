@@ -1,24 +1,42 @@
 <template>
-  <div class="app-container">
-    <!-- Sidebar -->
-    <Sidebar />
+  <div :class="isAuthenticated && $route.name !== 'Login' ? 'app-container' : 'login-page'">
+    <!-- Show login view if not authenticated OR if on login route -->
+    <router-view v-if="!isAuthenticated || $route.name === 'Login'" />
 
-    <!-- Main Content Area -->
-    <div class="main-content">
-      <!-- Header -->
-      <AppHeader />
+    <!-- Show main app if authenticated and not on login route -->
+    <template v-else>
+      <!-- Sidebar -->
+      <Sidebar />
 
-      <!-- Page Content -->
-      <main class="content-wrapper">
-        <router-view />
-      </main>
-    </div>
+      <!-- Main Content Area -->
+      <div class="main-content">
+        <!-- Header -->
+        <AppHeader />
+
+        <!-- Page Content -->
+        <main class="content-wrapper">
+          <router-view />
+        </main>
+      </div>
+    </template>
   </div>
 </template>
 
 <script setup>
+import { computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 import Sidebar from '@/components/layout/Sidebar.vue'
 import AppHeader from '@/components/layout/AppHeader.vue'
+
+const route = useRoute()
+const authStore = useAuthStore()
+const isAuthenticated = computed(() => authStore.isAuthenticated)
+
+// Initialize auth store on app mount
+onMounted(() => {
+  authStore.initializeAuth()
+})
 </script>
 
 <style scoped>
@@ -26,6 +44,12 @@ import AppHeader from '@/components/layout/AppHeader.vue'
   @apply flex min-h-screen relative;
   background: linear-gradient(135deg, #F9FAFB 0%, #F3F4F6 50%, #E5E7EB 100%);
   position: relative;
+}
+
+/* Login page styles - no flex layout */
+.login-page {
+  @apply min-h-screen;
+  background: linear-gradient(135deg, #F9FAFB 0%, #F3F4F6 50%, #E5E7EB 100%);
 }
 
 /* Animated background patterns */

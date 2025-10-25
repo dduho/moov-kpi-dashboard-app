@@ -555,23 +555,59 @@ const fetchAllData = async (dateParams) => {
     if (dateParams.date) {
       // Single date
       promises.push(
-        apiService.getDashboardData({ date: dateParams.date }).catch(e => ({ data: null, error: e })),
-        apiService.getAcquisitionData(dateParams.date).catch(e => ({ data: null, error: e })),
-        apiService.getMerchantData(dateParams.date).catch(e => ({ data: null, error: e })),
-        apiService.getAgentData(dateParams.date).catch(e => ({ data: null, error: e })),
-        apiService.getChannelMetrics(dateParams.date).catch(e => ({ data: null, error: e }))
+        apiService.getDashboardData({ date: dateParams.date }).catch(e => {
+          console.error('Dashboard API error:', e)
+          return { data: null, error: e.message }
+        }),
+        apiService.getAcquisitionData(dateParams.date).catch(e => {
+          console.error('Acquisition API error:', e)
+          return { data: null, error: e.message }
+        }),
+        apiService.getMerchantData(dateParams.date).catch(e => {
+          console.error('Merchant API error:', e)
+          return { data: null, error: e.message }
+        }),
+        apiService.getAgentData(dateParams.date).catch(e => {
+          console.error('Agent API error:', e)
+          return { data: null, error: e.message }
+        }),
+        apiService.getChannelMetrics(dateParams.date).catch(e => {
+          console.error('Channel API error:', e)
+          return { data: null, error: e.message }
+        })
       )
     } else {
       // Date range
       const { start_date, end_date } = dateParams
       promises.push(
-        apiService.getDashboardData({ startDate: start_date, endDate: end_date }).catch(e => ({ data: null, error: e })),
-        apiService.getAcquisitionByDateRange(start_date, end_date).catch(e => ({ data: null, error: e })),
-        apiService.getMerchantsByDateRange(start_date, end_date).catch(e => ({ data: null, error: e })),
-        apiService.getAgentsByDateRange(start_date, end_date).catch(e => ({ data: null, error: e })),
-        apiService.getChannelMetricsByDateRange(start_date, end_date).catch(e => ({ data: null, error: e })),
-        apiService.getActiveUsers(start_date, end_date).catch(e => ({ data: null, error: e })),
-        apiService.getRevenueByChannel(start_date, end_date).catch(e => ({ data: null, error: e }))
+        apiService.getDashboardData({ startDate: start_date, endDate: end_date }).catch(e => {
+          console.error('Dashboard API error:', e)
+          return { data: null, error: e.message }
+        }),
+        apiService.getAcquisitionByDateRange(start_date, end_date).catch(e => {
+          console.error('Acquisition API error:', e)
+          return { data: null, error: e.message }
+        }),
+        apiService.getMerchantsByDateRange(start_date, end_date).catch(e => {
+          console.error('Merchant API error:', e)
+          return { data: null, error: e.message }
+        }),
+        apiService.getAgentsByDateRange(start_date, end_date).catch(e => {
+          console.error('Agent API error:', e)
+          return { data: null, error: e.message }
+        }),
+        apiService.getChannelMetricsByDateRange(start_date, end_date).catch(e => {
+          console.error('Channel API error:', e)
+          return { data: null, error: e.message }
+        }),
+        apiService.getActiveUsers(start_date, end_date).catch(e => {
+          console.error('Users API error:', e)
+          return { data: null, error: e.message }
+        }),
+        apiService.getRevenueByChannel(start_date, end_date).catch(e => {
+          console.error('Revenue API error:', e)
+          return { data: null, error: e.message }
+        })
       )
     }
 
@@ -586,6 +622,16 @@ const fetchAllData = async (dateParams) => {
     if (results.length > 5) {
       usersData.value = results[5]?.data || results[5]
       revenueData.value = results[6]?.data || results[6]
+    }
+
+    // Check if we have any data at all
+    const hasAnyData = dashboardData.value || acquisitionData.value || merchantData.value ||
+                      agentData.value || channelData.value || usersData.value || revenueData.value
+
+    if (!hasAnyData) {
+      error.value = 'No data available for the selected period. The database might be empty or the date range contains no data.'
+    } else {
+      error.value = null // Clear any previous error if we have data
     }
 
     loading.value = false
@@ -818,7 +864,11 @@ const getHeatmapColor = (value) => {
 
 // Lifecycle
 onMounted(() => {
-  // Data will be loaded when DateSelector emits first dateChange
+  // Load default data (yesterday) on mount
+  const yesterday = new Date()
+  yesterday.setDate(yesterday.getDate() - 1)
+  const dateStr = yesterday.toISOString().split('T')[0].replace(/-/g, '')
+  fetchAllData({ date: dateStr })
 })
 </script>
 

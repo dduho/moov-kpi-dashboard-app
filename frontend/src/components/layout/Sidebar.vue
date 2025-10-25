@@ -13,7 +13,7 @@
             <path d="M13 2.05v2.02c3.95.49 7 3.85 7 7.93 0 4.08-3.05 7.44-7 7.93v2.02c5.05-.5 9-4.76 9-9.95s-3.95-9.45-9-9.95zM12 19.93c-3.95-.49-7-3.85-7-7.93s3.05-7.44 7-7.93V2.05c-5.05.5-9 4.76-9 9.95s3.95 9.45 9 9.95v-2.02z"/>
           </svg>
         </div>
-        <span v-if="isOpen" class="text-xl font-bold">Dabang</span>
+        <span v-if="isOpen" class="text-xl font-bold">Moov Pulse</span>
       </div>
 
       <!-- Burger Menu Button (Mobile) -->
@@ -29,7 +29,7 @@
     <!-- Navigation -->
     <nav class="mt-8 px-2">
       <router-link
-        v-for="item in menuItems"
+        v-for="item in filteredMenuItems"
         :key="item.path"
         :to="item.path"
         class="nav-item"
@@ -42,11 +42,11 @@
 
     <!-- Settings & Sign Out -->
     <div class="absolute bottom-52 left-0 right-0 px-2 space-y-1">
-      <router-link to="/settings" class="nav-item">
+      <router-link to="/settings" class="nav-item" v-if="hasPermission('system:settings')">
         <IconSettings :size="20" class="flex-shrink-0" />
         <span v-if="isOpen" class="ml-3 font-medium">Settings</span>
       </router-link>
-      <button class="nav-item w-full text-left">
+      <button @click="handleLogout" class="nav-item w-full text-left">
         <IconLogout :size="20" class="flex-shrink-0" />
         <span v-if="isOpen" class="ml-3 font-medium">Sign Out</span>
       </button>
@@ -58,7 +58,7 @@
         <div class="pro-icon-circle">
           <IconBadgeCheck :size="24" />
         </div>
-        <h3 class="text-sm font-bold mb-1">Dabang Pro</h3>
+        <h3 class="text-sm font-bold mb-1">Moov Pulse</h3>
         <p class="text-xs opacity-90 mb-3">Get access to all features</p>
         <button class="pro-btn">
           Get Pro
@@ -76,8 +76,9 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 import {
   IconDashboard,
   IconLeaderboard,
@@ -93,40 +94,66 @@ import {
 } from '@/components/icons/Icons.vue'
 
 const route = useRoute()
+const authStore = useAuthStore()
 const isOpen = ref(window.innerWidth >= 1024) // Closed on mobile by default
 
 const menuItems = [
   {
     path: '/',
     label: 'Dashboard',
-    icon: IconDashboard
+    icon: IconDashboard,
+    permission: 'dashboard:view'
   },
   {
-    path: '/leaderboard',
-    label: 'Leaderboard',
-    icon: IconLeaderboard
+    path: '/daily-kpis',
+    label: 'Daily KPIs',
+    icon: IconLeaderboard,
+    permission: 'kpis:view'
   },
   {
-    path: '/orders',
-    label: 'Order',
-    icon: IconOrders
+    path: '/hourly-kpis',
+    label: 'Hourly KPIs',
+    icon: IconSalesReport,
+    permission: 'kpis:view'
   },
   {
-    path: '/daily',
-    label: 'Products',
-    icon: IconProducts
+    path: '/imt',
+    label: 'IMT',
+    icon: IconOrders,
+    permission: 'imt:view'
   },
   {
     path: '/revenue',
-    label: 'Sales Report',
-    icon: IconSalesReport
+    label: 'Revenue',
+    icon: IconSalesReport,
+    permission: 'revenue:view'
+  },
+  {
+    path: '/users',
+    label: 'Users',
+    icon: IconProducts,
+    permission: 'users:view'
   },
   {
     path: '/reports',
-    label: 'Messages',
-    icon: IconMessages
+    label: 'Reports',
+    icon: IconMessages,
+    permission: 'export:view'
   }
 ]
+
+// Filter menu items based on permissions
+const filteredMenuItems = computed(() => {
+  return menuItems.filter(item => {
+    if (!item.permission) return true
+    return authStore.hasPermission(item.permission)
+  })
+})
+
+// Helper function for permission checking
+const hasPermission = (permission) => {
+  return authStore.hasPermission(permission)
+}
 
 const isActive = (path) => {
   return route.path === path
@@ -134,6 +161,10 @@ const isActive = (path) => {
 
 const toggleSidebar = () => {
   isOpen.value = !isOpen.value
+}
+
+const handleLogout = async () => {
+  await authStore.logout()
 }
 
 // Handle window resize

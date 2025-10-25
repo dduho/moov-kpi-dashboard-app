@@ -55,7 +55,7 @@ services:
       - ALGORITHM=HS256
       - ACCESS_TOKEN_EXPIRE_MINUTES=30
     ports:
-      - "8000:3000"
+      - "8000:8000"
     depends_on:
       postgres:
         condition: service_healthy
@@ -68,18 +68,45 @@ services:
       - ./backend:/app
       - /app/node_modules
     healthcheck:
-      # ⚠️ Vérifie le port INTERNE (3000), pas le port host 8000
-      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      # ⚠️ Vérifie le port INTERNE (8000) selon la configuration API_PORT
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
 
-  # Frontend
+  # Frontend Development (with hot reload)
+  frontend-dev:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.frontend.dev
+    container_name: kpi-frontend-dev-server
+    ports:
+      - "5173:5173"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - kpi-network
+    restart: unless-stopped
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - VITE_API_BASE_URL=http://backend:8000
+    command: npm run dev -- --host 0.0.0.0
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5173", "||", "exit", "1"]
+      interval: 60s
+      timeout: 30s
+      retries: 5
+      start_period: 30s
+
+  # Frontend Production (nginx)
   frontend:
     build:
       context: .
       dockerfile: docker/Dockerfile.frontend
-    container_name: kpi-frontend-dev
+    container_name: kpi-frontend-prod
     ports:
       - "8080:80"
     depends_on:
