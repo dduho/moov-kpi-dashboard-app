@@ -162,30 +162,70 @@ class ExcelParserService {
 
     for (const sheetName of sheets) {
       const worksheet = workbook.getWorksheet(sheetName)
-      if (!worksheet) continue
-
-      // This is a simplified parsing - in reality, you'd need to map the exact structure
-      // For now, we'll create sample records based on the sheet name
-      const record = {
-        date,
-        channel: sheetName.toLowerCase(),
-        transaction_count: 0,
-        amount: 0,
-        revenue: 0,
-        commission: 0,
-        tax: 0
+      if (!worksheet) {
+        logger.warn(`Worksheet '${sheetName}' not found in revenue file for date ${date}`)
+        continue
       }
 
-      // Parse actual data from worksheet here
-      // This would need to be customized based on the exact Excel structure
+      try {
+        // Initialize aggregates for this channel
+        let totalTransactionCount = 0
+        let totalAmount = 0
+        let totalRevenue = 0
+        let totalCommission = 0
+        let totalTax = 0
 
-      records.push(record)
+        // Parse data from worksheet
+        // Assuming data starts at row 2 (row 1 is header)
+        worksheet.eachRow((row, rowNumber) => {
+          if (rowNumber === 1) return // Skip header row
+
+          // Try to extract data - adapt column indices based on actual Excel structure
+          // Common structure: Column 1-3: metadata, 4: count, 5: amount, 6: revenue, 7: commission, 8: tax
+          const transactionCount = this.getNumericValue(row, 4)
+          const amount = this.getNumericValue(row, 5)
+          const revenue = this.getNumericValue(row, 6)
+          const commission = this.getNumericValue(row, 7)
+          const tax = this.getNumericValue(row, 8)
+
+          // Only accumulate if we have valid data
+          if (transactionCount > 0 || amount > 0 || revenue > 0) {
+            totalTransactionCount += transactionCount
+            totalAmount += amount
+            totalRevenue += revenue
+            totalCommission += commission
+            totalTax += tax
+          }
+        })
+
+        // Only create record if we have meaningful data
+        if (totalTransactionCount > 0 || totalAmount > 0 || totalRevenue > 0) {
+          const record = {
+            date,
+            channel: sheetName.toLowerCase().replace(/\s+/g, '_'),
+            transaction_count: totalTransactionCount,
+            amount: totalAmount,
+            revenue: totalRevenue,
+            commission: totalCommission,
+            tax: totalTax
+          }
+          records.push(record)
+          logger.info(`Parsed revenue data for channel '${sheetName}': ${totalTransactionCount} transactions, ${totalRevenue} revenue`)
+        } else {
+          logger.warn(`No valid data found in worksheet '${sheetName}' for date ${date}`)
+        }
+      } catch (error) {
+        logger.error(`Error parsing worksheet '${sheetName}' for date ${date}:`, error)
+      }
     }
 
     if (records.length > 0) {
       await RevenueByChannel.bulkCreate(records, {
         updateOnDuplicate: ['transaction_count', 'amount', 'revenue', 'commission', 'tax']
       })
+      logger.info(`Successfully saved ${records.length} revenue records for date ${date}`)
+    } else {
+      logger.warn(`No revenue records to save for date ${date}`)
     }
   }
 

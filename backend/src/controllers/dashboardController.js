@@ -648,25 +648,237 @@ class DashboardController {
     }))
   }
 
-  // Additional helper methods would be implemented here
-  calculateDailyTotals(hourlyMap) { /* implementation */ return {} }
-  findPeakHours(hourlyData) { /* implementation */ return [] }
-  findLowActivityPeriods(hourlyData) { /* implementation */ return [] }
-  calculateHourlyTrends(hourlyData) { /* implementation */ return {} }
-  calculateImtRatios(flows) { /* implementation */ return {} }
-  calculateAverage(arr) { return arr.length > 0 ? arr.reduce((a, b) => a + b, 0) / arr.length : 0 }
-  calculateTrend(arr) { /* implementation */ return [] }
-  sumArray(arr) { return arr.reduce((a, b) => a + b, 0) }
-  calculateRecurringUsers(users) { /* implementation */ return 0 }
-  calculateRetentionRate(users) { /* implementation */ return 0 }
-  calculateFinancialComparisons(channels) { /* implementation */ return {} }
-  calculateFinancialRates(channels) { /* implementation */ return {} }
-  calculateMovingAverage(values, period) { /* implementation */ return [] }
-  detectSeasonality(values) { /* implementation */ return {} }
-  calculateGrowthMetrics(values) { /* implementation */ return {} }
-  calculateProjection(values) { /* implementation */ return [] }
-  calculateSuccessRateTrend(dailyKpis) { /* implementation */ return [] }
-  detectFailureSpikes(dailyKpis) { /* implementation */ return [] }
+  // Additional helper methods
+  calculateDailyTotals(hourlyMap) {
+    const dailyTotals = {}
+    Array.from(hourlyMap.values()).forEach(hourData => {
+      if (!dailyTotals[hourData.date]) {
+        dailyTotals[hourData.date] = {
+          transactions: 0,
+          amount: 0,
+          revenue: 0
+        }
+      }
+      dailyTotals[hourData.date].transactions += hourData.transactions
+      dailyTotals[hourData.date].amount += hourData.amount
+      dailyTotals[hourData.date].revenue += hourData.revenue
+    })
+    return dailyTotals
+  }
+
+  findPeakHours(hourlyData) {
+    const sorted = [...hourlyData].sort((a, b) =>
+      b.count.current - a.count.current
+    )
+    return sorted.slice(0, 3).map(h => ({
+      hour: h.hour,
+      transactions: h.count.current,
+      percentageOfDay: h.count.percentageOfDay
+    }))
+  }
+
+  findLowActivityPeriods(hourlyData) {
+    const sorted = [...hourlyData].sort((a, b) =>
+      a.count.current - b.count.current
+    )
+    return sorted.slice(0, 3).map(h => ({
+      hour: h.hour,
+      transactions: h.count.current,
+      percentageOfDay: h.count.percentageOfDay
+    }))
+  }
+
+  calculateHourlyTrends(hourlyData) {
+    const totalTransactions = hourlyData.reduce((sum, h) => sum + h.count.current, 0)
+    const avgPerHour = totalTransactions / 24
+    return {
+      averagePerHour: Math.round(avgPerHour),
+      peakHour: hourlyData.reduce((max, h) =>
+        h.count.current > max.count.current ? h : max
+      ).hour,
+      lowHour: hourlyData.reduce((min, h) =>
+        h.count.current < min.count.current ? h : min
+      ).hour
+    }
+  }
+
+  calculateImtRatios(flows) {
+    const totalAmount = Object.values(flows).reduce((sum, f) => sum + f.amount, 0)
+    const totalCount = Object.values(flows).reduce((sum, f) => sum + f.count, 0)
+
+    const ratios = {}
+    Object.entries(flows).forEach(([flow, data]) => {
+      ratios[flow] = {
+        amountPercentage: totalAmount > 0 ? ((data.amount / totalAmount) * 100).toFixed(2) : 0,
+        countPercentage: totalCount > 0 ? ((data.count / totalCount) * 100).toFixed(2) : 0,
+        avgTicket: data.count > 0 ? (data.amount / data.count).toFixed(2) : 0
+      }
+    })
+    return ratios
+  }
+
+  calculateAverage(arr) {
+    return arr.length > 0 ? arr.reduce((a, b) => a + b, 0) / arr.length : 0
+  }
+
+  calculateTrend(arr) {
+    if (arr.length < 2) return []
+    const trends = []
+    for (let i = 1; i < arr.length; i++) {
+      const change = arr[i] - arr[i - 1]
+      const changePercent = arr[i - 1] !== 0 ? ((change / arr[i - 1]) * 100).toFixed(2) : 0
+      trends.push({ value: arr[i], change, changePercent })
+    }
+    return trends
+  }
+
+  sumArray(arr) {
+    return arr.reduce((a, b) => a + b, 0)
+  }
+
+  calculateRecurringUsers(users) {
+    if (users.length < 2) return 0
+    const latest = users[users.length - 1]
+    const previous = users[users.length - 2]
+    return Math.max(0, latest.dau - latest.new_users)
+  }
+
+  calculateRetentionRate(users) {
+    if (users.length < 30) return 0
+    const thirtyDaysAgo = users[users.length - 30]
+    const latest = users[users.length - 1]
+    const retained = latest.dau - latest.new_users
+    return thirtyDaysAgo.new_users > 0
+      ? ((retained / thirtyDaysAgo.new_users) * 100).toFixed(2)
+      : 0
+  }
+
+  calculateFinancialComparisons(channels) {
+    const comparisons = {}
+    const channelArray = Object.entries(channels)
+
+    channelArray.forEach(([name, data], index) => {
+      if (index > 0) {
+        const prev = channelArray[index - 1][1]
+        comparisons[name] = {
+          revenueChange: ((data.revenue - prev.revenue) / prev.revenue * 100).toFixed(2),
+          transactionChange: ((data.transactionCount - prev.transactionCount) / prev.transactionCount * 100).toFixed(2)
+        }
+      }
+    })
+    return comparisons
+  }
+
+  calculateFinancialRates(channels) {
+    const rates = {}
+    Object.entries(channels).forEach(([name, data]) => {
+      rates[name] = {
+        commissionRate: data.amount > 0 ? ((data.commission / data.amount) * 100).toFixed(2) : 0,
+        taxRate: data.amount > 0 ? ((data.tax / data.amount) * 100).toFixed(2) : 0,
+        revenueRate: data.amount > 0 ? ((data.revenue / data.amount) * 100).toFixed(2) : 0,
+        netMargin: data.revenue > 0 ? ((data.netRevenue / data.revenue) * 100).toFixed(2) : 0
+      }
+    })
+    return rates
+  }
+
+  calculateMovingAverage(values, period) {
+    if (values.length < period) return []
+    const result = []
+    for (let i = period - 1; i < values.length; i++) {
+      const slice = values.slice(i - period + 1, i + 1)
+      const avg = slice.reduce((a, b) => a + b, 0) / period
+      result.push(avg)
+    }
+    return result
+  }
+
+  detectSeasonality(values) {
+    if (values.length < 7) return { detected: false }
+
+    const weeklyPattern = []
+    for (let i = 0; i < 7 && i < values.length; i++) {
+      weeklyPattern.push(values.filter((_, idx) => idx % 7 === i))
+    }
+
+    return {
+      detected: true,
+      weeklyAverages: weeklyPattern.map(day =>
+        day.reduce((a, b) => a.transactions + b.transactions, 0) / day.length
+      )
+    }
+  }
+
+  calculateGrowthMetrics(values) {
+    if (values.length < 2) return { growth: 0, acceleration: 0 }
+
+    const recent = values.slice(-7)
+    const previous = values.slice(-14, -7)
+
+    const recentAvg = recent.reduce((a, b) => a + b.transactions, 0) / recent.length
+    const previousAvg = previous.length > 0
+      ? previous.reduce((a, b) => a + b.transactions, 0) / previous.length
+      : recentAvg
+
+    const growth = previousAvg > 0 ? ((recentAvg - previousAvg) / previousAvg * 100).toFixed(2) : 0
+
+    return {
+      growth: parseFloat(growth),
+      recentAvg: Math.round(recentAvg),
+      previousAvg: Math.round(previousAvg)
+    }
+  }
+
+  calculateProjection(values) {
+    if (values.length < 7) return []
+
+    const recent = values.slice(-7)
+    const avg = recent.reduce((a, b) => a + b, 0) / recent.length
+    const trend = (recent[recent.length - 1] - recent[0]) / recent.length
+
+    const projection = []
+    for (let i = 1; i <= 7; i++) {
+      projection.push(Math.max(0, Math.round(avg + (trend * i))))
+    }
+    return projection
+  }
+
+  calculateSuccessRateTrend(dailyKpis) {
+    const grouped = {}
+    dailyKpis.forEach(kpi => {
+      if (!grouped[kpi.date]) {
+        grouped[kpi.date] = { success: 0, total: 0 }
+      }
+      grouped[kpi.date].success += kpi.success_trx
+      grouped[kpi.date].total += kpi.success_trx + (kpi.failed_trx || 0)
+    })
+
+    return Object.entries(grouped).map(([date, data]) => ({
+      date,
+      successRate: data.total > 0 ? ((data.success / data.total) * 100).toFixed(2) : 0
+    }))
+  }
+
+  detectFailureSpikes(dailyKpis) {
+    const failures = {}
+    dailyKpis.forEach(kpi => {
+      if (!failures[kpi.date]) {
+        failures[kpi.date] = 0
+      }
+      failures[kpi.date] += kpi.failed_trx || 0
+    })
+
+    const dates = Object.keys(failures).sort()
+    const values = dates.map(d => failures[d])
+    const avg = values.reduce((a, b) => a + b, 0) / values.length
+    const threshold = avg * 1.5 // 50% above average is considered a spike
+
+    return dates.filter((date, idx) => values[idx] > threshold).map(date => ({
+      date,
+      failures: failures[date],
+      deviation: ((failures[date] - avg) / avg * 100).toFixed(2)
+    }))
+  }
 
   async getComparisons(currentDate) {
     const previousDate = this.getPreviousDate(currentDate)

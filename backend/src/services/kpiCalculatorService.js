@@ -4,6 +4,7 @@ const ImtTransaction = require('../models/ImtTransaction')
 const RevenueByChannel = require('../models/RevenueByChannel')
 const ActiveUsers = require('../models/ActiveUsers')
 const KpiComparisons = require('../models/KpiComparisons')
+const KpiAggregates = require('../models/KpiAggregates')
 const logger = require('../utils/logger')
 
 class KpiCalculatorService {
@@ -34,24 +35,57 @@ class KpiCalculatorService {
       if (!businessAggregates[kpi.business_type]) {
         businessAggregates[kpi.business_type] = {
           totalTransactions: 0,
+          totalSuccess: 0,
+          totalFailed: 0,
           totalAmount: 0,
           totalRevenue: 0,
           totalCommission: 0,
-          totalTax: 0,
-          successRate: 0
+          totalTax: 0
         }
       }
 
       const agg = businessAggregates[kpi.business_type]
-      agg.totalTransactions += kpi.success_trx
+      agg.totalSuccess += kpi.success_trx
+      agg.totalFailed += kpi.failed_trx || 0
+      agg.totalTransactions = agg.totalSuccess + agg.totalFailed
       agg.totalAmount += parseFloat(kpi.amount || 0)
       agg.totalRevenue += parseFloat(kpi.revenue || 0)
       agg.totalCommission += parseFloat(kpi.commission || 0)
       agg.totalTax += parseFloat(kpi.tax || 0)
     })
 
-    // Store or update aggregated data if needed
-    // This could be used for pre-calculated dashboard data
+    // Save aggregated data to database
+    const aggregateRecords = []
+    for (const [businessType, agg] of Object.entries(businessAggregates)) {
+      const successRate = agg.totalTransactions > 0
+        ? (agg.totalSuccess / agg.totalTransactions * 100).toFixed(2)
+        : 0
+
+      aggregateRecords.push({
+        date,
+        aggregate_type: 'business_type',
+        aggregate_key: businessType,
+        total_transactions: agg.totalTransactions,
+        total_success: agg.totalSuccess,
+        total_failed: agg.totalFailed,
+        total_amount: agg.totalAmount,
+        total_revenue: agg.totalRevenue,
+        total_commission: agg.totalCommission,
+        total_tax: agg.totalTax,
+        success_rate: successRate
+      })
+    }
+
+    if (aggregateRecords.length > 0) {
+      await KpiAggregates.bulkCreate(aggregateRecords, {
+        updateOnDuplicate: [
+          'total_transactions', 'total_success', 'total_failed',
+          'total_amount', 'total_revenue', 'total_commission',
+          'total_tax', 'success_rate', 'updated_at'
+        ]
+      })
+      logger.info(`Saved ${aggregateRecords.length} business type aggregates for date ${date}`)
+    }
   }
 
   async calculateImtAggregates(date) {
@@ -62,26 +96,58 @@ class KpiCalculatorService {
     imtData.forEach(item => {
       if (!countryAggregates[item.country]) {
         countryAggregates[item.country] = {
+          totalSuccess: 0,
+          totalFailed: 0,
           totalTransactions: 0,
           totalAmount: 0,
           totalRevenue: 0,
-          successRate: 0
+          totalCommission: 0,
+          totalTax: 0
         }
       }
 
       const agg = countryAggregates[item.country]
-      agg.totalTransactions += item.total_success
+      agg.totalSuccess += item.total_success
+      agg.totalFailed += item.total_failed
+      agg.totalTransactions = agg.totalSuccess + agg.totalFailed
       agg.totalAmount += parseFloat(item.amount || 0)
       agg.totalRevenue += parseFloat(item.revenue || 0)
+      agg.totalCommission += parseFloat(item.commission || 0)
+      agg.totalTax += parseFloat(item.tax || 0)
     })
 
-    // Calculate success rates
-    Object.keys(countryAggregates).forEach(country => {
-      const agg = countryAggregates[country]
-      const countryData = imtData.filter(item => item.country === country)
-      const totalTx = countryData.reduce((sum, item) => sum + item.total_success + item.total_failed, 0)
-      agg.successRate = totalTx > 0 ? (agg.totalTransactions / totalTx * 100).toFixed(2) : 0
-    })
+    // Save aggregated data to database
+    const aggregateRecords = []
+    for (const [country, agg] of Object.entries(countryAggregates)) {
+      const successRate = agg.totalTransactions > 0
+        ? (agg.totalSuccess / agg.totalTransactions * 100).toFixed(2)
+        : 0
+
+      aggregateRecords.push({
+        date,
+        aggregate_type: 'country',
+        aggregate_key: country,
+        total_transactions: agg.totalTransactions,
+        total_success: agg.totalSuccess,
+        total_failed: agg.totalFailed,
+        total_amount: agg.totalAmount,
+        total_revenue: agg.totalRevenue,
+        total_commission: agg.totalCommission,
+        total_tax: agg.totalTax,
+        success_rate: successRate
+      })
+    }
+
+    if (aggregateRecords.length > 0) {
+      await KpiAggregates.bulkCreate(aggregateRecords, {
+        updateOnDuplicate: [
+          'total_transactions', 'total_success', 'total_failed',
+          'total_amount', 'total_revenue', 'total_commission',
+          'total_tax', 'success_rate', 'updated_at'
+        ]
+      })
+      logger.info(`Saved ${aggregateRecords.length} country aggregates for date ${date}`)
+    }
   }
 
   async calculateRevenueAggregates(date) {
@@ -95,7 +161,7 @@ class KpiCalculatorService {
           totalRevenue: 0,
           totalCommission: 0,
           totalTax: 0,
-          netRevenue: 0,
+          totalAmount: 0,
           transactionCount: 0
         }
       }
@@ -104,9 +170,37 @@ class KpiCalculatorService {
       agg.totalRevenue += parseFloat(item.revenue || 0)
       agg.totalCommission += parseFloat(item.commission || 0)
       agg.totalTax += parseFloat(item.tax || 0)
-      agg.netRevenue += parseFloat(item.revenue || 0) - parseFloat(item.commission || 0) - parseFloat(item.tax || 0)
+      agg.totalAmount += parseFloat(item.amount || 0)
       agg.transactionCount += item.transaction_count
     })
+
+    // Save aggregated data to database
+    const aggregateRecords = []
+    for (const [channel, agg] of Object.entries(channelAggregates)) {
+      aggregateRecords.push({
+        date,
+        aggregate_type: 'channel',
+        aggregate_key: channel,
+        total_transactions: agg.transactionCount,
+        total_amount: agg.totalAmount,
+        total_revenue: agg.totalRevenue,
+        total_commission: agg.totalCommission,
+        total_tax: agg.totalTax,
+        metadata: {
+          net_revenue: agg.totalRevenue - agg.totalCommission - agg.totalTax
+        }
+      })
+    }
+
+    if (aggregateRecords.length > 0) {
+      await KpiAggregates.bulkCreate(aggregateRecords, {
+        updateOnDuplicate: [
+          'total_transactions', 'total_amount', 'total_revenue',
+          'total_commission', 'total_tax', 'metadata', 'updated_at'
+        ]
+      })
+      logger.info(`Saved ${aggregateRecords.length} channel aggregates for date ${date}`)
+    }
   }
 
   async calculateComparisons(date) {
