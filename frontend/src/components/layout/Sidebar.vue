@@ -181,9 +181,9 @@ onUnmounted(() => {
 /* Glassmorphism effect for sidebar */
 .sidebar-glass {
   background: linear-gradient(135deg,
-    rgba(59, 130, 246, 0.95) 0%,
+    rgba(30, 64, 175, 0.95) 0%,
     rgba(37, 99, 235, 0.95) 50%,
-    rgba(30, 64, 175, 0.95) 100%
+    rgba(59, 130, 246, 0.95) 100%
   );
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -233,7 +233,7 @@ onUnmounted(() => {
 .nav-item.active {
   @apply bg-white/20 text-white font-semibold shadow-lg;
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.15));
-  border-left: 3px solid #3B82F6;
+  border-left: 3px solid #1E40AF;
 }
 
 /* Pro Card with glass effect */
