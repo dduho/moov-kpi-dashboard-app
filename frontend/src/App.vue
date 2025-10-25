@@ -60,8 +60,8 @@ onMounted(() => {
   left: 0;
   right: 0;
   height: 100vh;
-  background: radial-gradient(circle at 20% 50%, rgba(91, 95, 237, 0.05) 0%, transparent 50%),
-              radial-gradient(circle at 80% 30%, rgba(139, 92, 246, 0.05) 0%, transparent 50%),
+  background: radial-gradient(circle at 20% 50%, rgba(249, 115, 22, 0.05) 0%, transparent 50%),
+              radial-gradient(circle at 80% 30%, rgba(234, 88, 12, 0.05) 0%, transparent 50%),
               radial-gradient(circle at 50% 80%, rgba(59, 130, 246, 0.05) 0%, transparent 50%);
   pointer-events: none;
   z-index: 0;

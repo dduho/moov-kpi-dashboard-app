@@ -105,14 +105,14 @@ selectDate('7days')
 
 .date-btn:hover {
   background: rgba(255, 255, 255, 0.8);
-  border-color: rgba(91, 95, 237, 0.3);
+  border-color: rgba(249, 115, 22, 0.3);
 }
 
 .date-btn-active {
-  background: linear-gradient(135deg, rgba(91, 95, 237, 0.9), rgba(74, 78, 217, 0.9)) !important;
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.9), rgba(234, 88, 12, 0.9)) !important;
   color: white !important;
   border-color: transparent !important;
-  box-shadow: 0 4px 15px rgba(91, 95, 237, 0.3);
+  box-shadow: 0 4px 15px rgba(249, 115, 22, 0.3);
 }
 
 .custom-date-wrapper {
@@ -128,12 +128,12 @@ selectDate('7days')
 
 .custom-date-input:hover {
   background: rgba(255, 255, 255, 0.8);
-  border-color: rgba(91, 95, 237, 0.3);
+  border-color: rgba(249, 115, 22, 0.3);
 }
 
 .custom-date-input:focus {
   outline: none;
-  border-color: rgba(91, 95, 237, 0.6);
-  box-shadow: 0 0 0 3px rgba(91, 95, 237, 0.1);
+  border-color: rgba(249, 115, 22, 0.6);
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
 }
 </style>

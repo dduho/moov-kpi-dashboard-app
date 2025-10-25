@@ -11,16 +11,28 @@ export default {
       },
       colors: {
         primary: {
-          50: '#f5f5ff',
-          100: '#ebebff',
-          200: '#d6d6ff',
-          300: '#b8b8ff',
-          400: '#9a9aff',
-          500: '#5B5FED', // Main purple from Figma
-          600: '#4a4ed9',
-          700: '#3a3eb3',
-          800: '#2d3090',
-          900: '#1f2163',
+          50: '#fff7ed',
+          100: '#ffedd5',
+          200: '#fed7aa',
+          300: '#fdba74',
+          400: '#fb923c',
+          500: '#F97316', // Main orange from Moov Africa
+          600: '#ea580c',
+          700: '#c2410c',
+          800: '#9a3412',
+          900: '#7c2d12',
+        },
+        secondary: {
+          50: '#eff6ff',
+          100: '#dbeafe',
+          200: '#bfdbfe',
+          300: '#93c5fd',
+          400: '#60a5fa',
+          500: '#3B82F6', // Main blue from Moov Africa
+          600: '#2563eb',
+          700: '#1d4ed8',
+          800: '#1e40af',
+          900: '#1e3a8a',
         },
         success: {
           50: '#f0fdf4',
@@ -58,7 +70,7 @@ export default {
           800: '#991b1b',
           900: '#7f1d1d',
         },
-        // Pastel colors for KPI cards (from Figma)
+        // Pastel colors for KPI cards (Moov Africa theme)
         pastel: {
           pink: '#FFE2E5',
           orange: '#FFF4DE',
@@ -67,7 +79,7 @@ export default {
           blue: '#E0F2FE',
           yellow: '#FEF3C7',
         },
-        // Chart colors
+        // Chart colors (Moov Africa theme)
         chart: {
           cyan: '#22D3EE',
           teal: '#14B8A6',
@@ -75,7 +87,7 @@ export default {
           yellow: '#FBBF24',
           orange: '#F97316',
           pink: '#EC4899',
-          purple: '#A855F7',
+          blue: '#3B82F6',
           indigo: '#6366F1',
         }
       }

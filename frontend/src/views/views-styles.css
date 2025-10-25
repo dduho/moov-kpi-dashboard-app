@@ -33,15 +33,15 @@
 /* Export Button */
 .export-btn {
   @apply flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all duration-300;
-  background: linear-gradient(135deg, rgba(91, 95, 237, 0.9), rgba(74, 78, 217, 0.9));
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.9), rgba(59, 130, 246, 0.9));
   color: white;
   border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 4px 15px rgba(91, 95, 237, 0.3);
+  box-shadow: 0 4px 15px rgba(249, 115, 22, 0.3);
 }
 
 .export-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(91, 95, 237, 0.4);
+  box-shadow: 0 6px 20px rgba(249, 115, 22, 0.4);
 }
 
 .export-btn:active {

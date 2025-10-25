@@ -6,7 +6,7 @@
     </div>
 
     <!-- Main Value -->
-    <div class="main-value">{{ value }}</div>
+    <div class="main-value">{{ displayValue }}</div>
 
     <!-- Title -->
     <div class="title">{{ title }}</div>
@@ -49,6 +49,19 @@ const trendClass = computed(() => {
 const trendIcon = computed(() => {
   const trend = parseFloat(props.trend || 0)
   return trend > 0 ? '↗' : trend < 0 ? '↘' : '→'
+})
+
+// Display value without currency symbol for KPI cards
+const displayValue = computed(() => {
+  if (typeof props.value === 'string') {
+    // Remove currency symbols from both start and end
+    return props.value
+      .replace(/^F CFA\s*/, '') // Remove from start
+      .replace(/\s*F CFA$/, '') // Remove from end
+      .replace(/^CFA\s*/, '') // Remove CFA from start
+      .replace(/\s*CFA$/, '') // Remove CFA from end
+  }
+  return props.value
 })
 
 // Icon components based on iconType

@@ -201,22 +201,22 @@ const filteredReports = computed(() => {
 
 .generate-btn {
   @apply w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-300;
-  background: linear-gradient(135deg, rgba(91, 95, 237, 0.9), rgba(74, 78, 217, 0.9));
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.9), rgba(234, 88, 12, 0.9));
   color: white;
 }
 
 .generate-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(91, 95, 237, 0.3);
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
 }
 
 .download-btn-sm {
   @apply flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200;
-  background: rgba(91, 95, 237, 0.1);
-  color: #5B5FED;
+  background: rgba(249, 115, 22, 0.1);
+  color: #F97316;
 }
 
 .download-btn-sm:hover {
-  background: rgba(91, 95, 237, 0.2);
+  background: rgba(249, 115, 22, 0.2);
 }
 </style>

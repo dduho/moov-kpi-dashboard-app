@@ -753,7 +753,7 @@ const getHeatmapColor = (value) => {
 
 .category-title {
   @apply text-2xl font-bold mb-6;
-  background: linear-gradient(135deg, #5B5FED, #A855F7);
+  background: linear-gradient(135deg, #F97316, #3B82F6);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

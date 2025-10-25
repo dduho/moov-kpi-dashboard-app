@@ -914,19 +914,19 @@ onMounted(() => {
 
 .tab-btn:hover {
   background: rgba(255, 255, 255, 0.8);
-  border-color: rgba(91, 95, 237, 0.3);
+  border-color: rgba(249, 115, 22, 0.3);
 }
 
-.tab-active {
-  background: linear-gradient(135deg, rgba(91, 95, 237, 0.9), rgba(74, 78, 217, 0.9)) !important;
+.date-btn-active {
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.9), rgba(234, 88, 12, 0.9)) !important;
   color: white !important;
   border-color: transparent !important;
-  box-shadow: 0 4px 15px rgba(91, 95, 237, 0.3);
+  box-shadow: 0 4px 15px rgba(249, 115, 22, 0.3);
 }
 
 .category-title {
   @apply text-2xl font-bold mb-6;
-  background: linear-gradient(135deg, #5B5FED, #A855F7);
+  background: linear-gradient(135deg, #F97316, #3B82F6);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -953,4 +953,8 @@ onMounted(() => {
 .channel-metric-card {
   @apply p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-all;
 }
+</style>
+
+<style scoped>
+@import './views-styles.css';
 </style>

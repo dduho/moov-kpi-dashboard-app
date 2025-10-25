@@ -181,9 +181,9 @@ onUnmounted(() => {
 /* Glassmorphism effect for sidebar */
 .sidebar-glass {
   background: linear-gradient(135deg,
-    rgba(91, 95, 237, 0.95) 0%,
-    rgba(74, 78, 217, 0.95) 50%,
-    rgba(58, 62, 179, 0.95) 100%
+    rgba(249, 115, 22, 0.95) 0%,
+    rgba(234, 88, 12, 0.95) 50%,
+    rgba(217, 33, 33, 0.95) 100%
   );
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
