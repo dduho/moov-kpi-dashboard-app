@@ -9,7 +9,7 @@
     <div class="flex items-center justify-between py-6 px-4">
       <div class="flex items-center gap-3">
         <div class="logo-circle">
-          <svg class="w-6 h-6 text-primary-500" fill="currentColor" viewBox="0 0 24 24">
+          <svg class="w-6 h-6 text-secondary-400" fill="currentColor" viewBox="0 0 24 24">
             <path d="M13 2.05v2.02c3.95.49 7 3.85 7 7.93 0 4.08-3.05 7.44-7 7.93v2.02c5.05-.5 9-4.76 9-9.95s-3.95-9.45-9-9.95zM12 19.93c-3.95-.49-7-3.85-7-7.93s3.05-7.44 7-7.93V2.05c-5.05.5-9 4.76-9 9.95s3.95 9.45 9 9.95v-2.02z"/>
           </svg>
         </div>
@@ -181,9 +181,9 @@ onUnmounted(() => {
 /* Glassmorphism effect for sidebar */
 .sidebar-glass {
   background: linear-gradient(135deg,
-    rgba(249, 115, 22, 0.95) 0%,
-    rgba(234, 88, 12, 0.95) 50%,
-    rgba(217, 33, 33, 0.95) 100%
+    rgba(59, 130, 246, 0.95) 0%,
+    rgba(37, 99, 235, 0.95) 50%,
+    rgba(30, 64, 175, 0.95) 100%
   );
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -232,8 +232,8 @@ onUnmounted(() => {
 
 .nav-item.active {
   @apply bg-white/20 text-white font-semibold shadow-lg;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
-  border-left: 3px solid white;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.15));
+  border-left: 3px solid #3B82F6;
 }
 
 /* Pro Card with glass effect */
@@ -263,7 +263,7 @@ onUnmounted(() => {
 }
 
 .pro-btn {
-  @apply w-full bg-white text-primary-600 py-2 px-4 rounded-lg text-sm font-semibold transition-all duration-300;
+  @apply w-full bg-white text-secondary-600 py-2 px-4 rounded-lg text-sm font-semibold transition-all duration-300;
   box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
 }
 
