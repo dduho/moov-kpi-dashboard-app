@@ -133,6 +133,70 @@ export const apiService = {
       params,
       responseType: 'blob'
     })
+  },
+
+  // Acquisition & KYC
+  getAcquisitionData(date) {
+    return apiClient.get('/acquisition', {
+      params: { date: formatDate(date) }
+    })
+  },
+
+  getAcquisitionByDateRange(startDate, endDate) {
+    return apiClient.get('/acquisition', {
+      params: {
+        start_date: formatDate(startDate),
+        end_date: formatDate(endDate)
+      }
+    })
+  },
+
+  // Merchants
+  getMerchantData(date) {
+    return apiClient.get('/merchants', {
+      params: { date: formatDate(date) }
+    })
+  },
+
+  getMerchantsByDateRange(startDate, endDate) {
+    return apiClient.get('/merchants', {
+      params: {
+        start_date: formatDate(startDate),
+        end_date: formatDate(endDate)
+      }
+    })
+  },
+
+  // Agents
+  getAgentData(date) {
+    return apiClient.get('/agents', {
+      params: { date: formatDate(date) }
+    })
+  },
+
+  getAgentsByDateRange(startDate, endDate) {
+    return apiClient.get('/agents', {
+      params: {
+        start_date: formatDate(startDate),
+        end_date: formatDate(endDate)
+      }
+    })
+  },
+
+  // Channels
+  getChannelMetrics(date) {
+    return apiClient.get('/channels/metrics', {
+      params: { date: formatDate(date) }
+    })
+  },
+
+  getChannelMetricsByDateRange(startDate, endDate) {
+    return apiClient.get('/channels/metrics', {
+      params: {
+        start_date: formatDate(startDate),
+        end_date: formatDate(endDate)
+      }
+    })
   }
 }
 
