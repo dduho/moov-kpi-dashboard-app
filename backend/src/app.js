@@ -24,6 +24,10 @@ app.use('/api/revenue', require('./routes/revenue'))
 app.use('/api/users', require('./routes/users'))
 app.use('/api/comparisons', require('./routes/comparisons'))
 app.use('/api/export', require('./routes/export'))
+app.use('/api/acquisition', require('./routes/acquisition'))
+app.use('/api/merchants', require('./routes/merchants'))
+app.use('/api/agents', require('./routes/agents'))
+app.use('/api/channels', require('./routes/channels'))
 
 // Health check endpoint
 app.get('/health', (req, res) => {
