@@ -6,7 +6,9 @@
   "scripts": {
     "start": "node src/app.js",
     "dev": "nodemon src/app.js",
-    "ingest": "node src/jobs/dailyDataIngestion.js"
+    "ingest": "node src/jobs/dailyDataIngestion.js",
+    "test": "node tests/run-tests.js",
+    "build": "echo 'Backend: No build step required for Node.js'"
   },
   "dependencies": {
     "adm-zip": "^0.5.14",
