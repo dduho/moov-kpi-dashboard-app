@@ -6,25 +6,8 @@
         <h1 class="page-title">{{ pageTitle }}</h1>
       </div>
 
-      <!-- Right Section: Search, Language, Notifications, Profile -->
+      <!-- Right Section: Notifications, Profile -->
       <div class="flex items-center gap-4">
-        <!-- Search Bar -->
-        <div class="search-container hidden md:block">
-          <IconSearch :size="20" class="search-icon" />
-          <input
-            type="text"
-            placeholder="Search here..."
-            class="search-input"
-          />
-        </div>
-
-        <!-- Language Selector -->
-        <button class="glass-btn hidden sm:flex">
-          <img src="https://flagcdn.com/w20/us.png" alt="US Flag" class="w-5 h-5 rounded-sm" />
-          <span class="text-sm font-medium text-gray-700">Eng (US)</span>
-          <IconChevronDown :size="16" class="text-gray-500" />
-        </button>
-
         <!-- Notifications -->
         <button class="icon-btn relative">
           <IconBell :size="22" class="text-gray-600" />
@@ -49,16 +32,16 @@
         <div v-if="showProfileMenu" class="profile-menu">
           <div class="profile-menu-item" @click="viewProfile">
             <IconUser :size="16" />
-            <span>Profile</span>
+            <span>Profil</span>
           </div>
           <div class="profile-menu-item" @click="viewSettings">
             <IconSettings :size="16" />
-            <span>Settings</span>
+            <span>Paramètres</span>
           </div>
           <div class="profile-menu-divider"></div>
           <div class="profile-menu-item text-red-600" @click="handleLogout">
             <IconLogout :size="16" />
-            <span>Logout</span>
+            <span>Déconnexion</span>
           </div>
         </div>
       </div>
@@ -70,7 +53,7 @@
 import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { IconSearch, IconBell, IconChevronDown, IconUser, IconSettings, IconLogout } from '@/components/icons/Icons.vue'
+import { IconBell, IconChevronDown, IconUser, IconSettings, IconLogout } from '@/components/icons/Icons.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -112,13 +95,13 @@ const toggleProfileMenu = () => {
 const viewProfile = () => {
   showProfileMenu.value = false
   // TODO: Navigate to profile page
-  console.log('View profile')
+  router.push('/profile')
 }
 
 const viewSettings = () => {
   showProfileMenu.value = false
   // TODO: Navigate to settings page
-  console.log('View settings')
+  router.push('/settings')
 }
 
 const handleLogout = async () => {

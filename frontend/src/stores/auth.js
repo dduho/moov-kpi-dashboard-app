@@ -11,8 +11,8 @@ export const useAuthStore = defineStore('auth', () => {
 
   // Computed properties
   const isAuthenticated = computed(() => !!token.value)
-  const userRole = computed(() => user.value?.role?.name || null)
-  const userPermissions = computed(() => user.value?.role?.permissions || [])
+  const userRole = computed(() => user.value?.roles?.[0]?.name || null)
+  const userPermissions = computed(() => user.value?.roles?.[0]?.permissions || [])
   const isAdmin = computed(() => {
     const role = userRole.value?.toLowerCase()
     return role === 'admin' || role === 'administrator' || role === 'superadmin'

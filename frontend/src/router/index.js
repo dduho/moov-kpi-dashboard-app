@@ -8,6 +8,8 @@ import RevenueView from '../views/RevenueView.vue'
 import UsersView from '../views/UsersView.vue'
 import ReportsView from '../views/ReportsView.vue'
 import LoginView from '../views/LoginView.vue'
+import ProfileView from '../views/ProfileView.vue'
+import SettingsView from '../views/SettingsView.vue'
 
 const routes = [
   {
@@ -57,6 +59,18 @@ const routes = [
     name: 'Reports',
     component: ReportsView,
     meta: { requiresAuth: true, permission: 'export:view' }
+  },
+  {
+    path: '/profile',
+    name: 'Profile',
+    component: ProfileView,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/settings',
+    name: 'Settings',
+    component: SettingsView,
+    meta: { requiresAuth: true }
   }
 ]
 

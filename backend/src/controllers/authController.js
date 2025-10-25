@@ -59,7 +59,13 @@ class AuthController {
             roles: user.roles.map(role => ({
               id: role.id,
               name: role.name,
-              description: role.description
+              description: role.description,
+              permissions: role.permissions.map(permission => ({
+                id: permission.id,
+                name: permission.name,
+                resource: permission.resource,
+                action: permission.action
+              }))
             }))
           },
           token
@@ -120,7 +126,13 @@ class AuthController {
             roles: user.roles.map(role => ({
               id: role.id,
               name: role.name,
-              description: role.description
+              description: role.description,
+              permissions: role.permissions.map(permission => ({
+                id: permission.id,
+                name: permission.name,
+                resource: permission.resource,
+                action: permission.action
+              }))
             }))
           }
         }
