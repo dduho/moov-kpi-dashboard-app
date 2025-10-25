@@ -1,72 +1,48 @@
 <template>
-  <header class="bg-white border-b border-gray-200 h-16 flex items-center px-8 sticky top-0 z-30">
+  <header class="header-glass sticky top-0 z-30">
     <div class="flex items-center justify-between w-full">
       <!-- Page Title (Dynamic) -->
-      <div>
-        <h1 class="text-2xl font-bold text-gray-800">{{ pageTitle }}</h1>
+      <div class="flex items-center gap-4">
+        <h1 class="page-title">{{ pageTitle }}</h1>
       </div>
 
       <!-- Right Section: Search, Language, Notifications, Profile -->
       <div class="flex items-center gap-4">
         <!-- Search Bar -->
-        <div class="relative">
+        <div class="search-container hidden md:block">
+          <IconSearch :size="20" class="search-icon" />
           <input
             type="text"
             placeholder="Search here..."
-            class="w-80 pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition"
+            class="search-input"
           />
-          <svg
-            class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-            />
-          </svg>
         </div>
 
         <!-- Language Selector -->
-        <button class="flex items-center gap-2 px-3 py-2 hover:bg-gray-50 rounded-lg transition">
+        <button class="glass-btn hidden sm:flex">
           <img src="https://flagcdn.com/w20/us.png" alt="US Flag" class="w-5 h-5 rounded-sm" />
           <span class="text-sm font-medium text-gray-700">Eng (US)</span>
-          <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-          </svg>
+          <IconChevronDown :size="16" class="text-gray-500" />
         </button>
 
         <!-- Notifications -->
-        <button class="relative p-2 hover:bg-gray-50 rounded-lg transition">
-          <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-            />
-          </svg>
-          <!-- Notification Badge -->
-          <span class="absolute top-1 right-1 w-2 h-2 bg-warning-500 rounded-full"></span>
+        <button class="icon-btn relative">
+          <IconBell :size="22" class="text-gray-600" />
+          <span class="notification-badge"></span>
         </button>
 
         <!-- User Profile -->
-        <div class="flex items-center gap-3 ml-2">
+        <div class="profile-container">
           <img
             src="https://i.pravatar.cc/150?img=12"
             alt="User Avatar"
-            class="w-10 h-10 rounded-full border-2 border-gray-200"
+            class="profile-avatar"
           />
-          <div class="flex flex-col">
+          <div class="profile-info hidden lg:flex">
             <span class="text-sm font-semibold text-gray-800">Musfiq</span>
             <span class="text-xs text-gray-500">Admin</span>
           </div>
-          <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-          </svg>
+          <IconChevronDown :size="16" class="text-gray-500 hidden lg:block" />
         </div>
       </div>
     </div>
@@ -76,6 +52,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
+import { IconSearch, IconBell, IconChevronDown } from '@/components/icons/Icons.vue'
 
 const route = useRoute()
 
@@ -99,5 +76,116 @@ const pageTitle = computed(() => {
 </script>
 
 <style scoped>
-/* Additional custom styles if needed */
+/* Header with glassmorphism */
+.header-glass {
+  @apply h-16 flex items-center px-8 border-b;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-color: rgba(229, 231, 235, 0.5);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+}
+
+/* Page title */
+.page-title {
+  @apply text-2xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent;
+}
+
+/* Search container with glass effect */
+.search-container {
+  @apply relative;
+}
+
+.search-input {
+  @apply w-80 pl-11 pr-4 py-2.5 rounded-xl transition-all duration-300;
+  background: rgba(249, 250, 251, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(229, 231, 235, 0.5);
+}
+
+.search-input:focus {
+  @apply outline-none ring-2 ring-primary-500/30 border-primary-500/50;
+  background: rgba(255, 255, 255, 0.9);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(91, 95, 237, 0.1);
+}
+
+.search-icon {
+  @apply absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400;
+}
+
+/* Glass button */
+.glass-btn {
+  @apply flex items-center gap-2 px-3 py-2 rounded-xl transition-all duration-300;
+  background: rgba(249, 250, 251, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(229, 231, 235, 0.5);
+}
+
+.glass-btn:hover {
+  background: rgba(255, 255, 255, 0.9);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* Icon button */
+.icon-btn {
+  @apply p-2.5 rounded-xl transition-all duration-300;
+  background: rgba(249, 250, 251, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(229, 231, 235, 0.5);
+}
+
+.icon-btn:hover {
+  background: rgba(255, 255, 255, 0.9);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* Notification badge */
+.notification-badge {
+  @apply absolute top-1.5 right-1.5 w-2 h-2 bg-warning-500 rounded-full;
+  animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes ping {
+  75%, 100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+/* Profile container */
+.profile-container {
+  @apply flex items-center gap-3 ml-2 px-3 py-2 rounded-xl cursor-pointer transition-all duration-300;
+  background: rgba(249, 250, 251, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(229, 231, 235, 0.5);
+}
+
+.profile-container:hover {
+  background: rgba(255, 255, 255, 0.9);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.profile-avatar {
+  @apply w-10 h-10 rounded-full border-2 border-white shadow-md;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.profile-info {
+  @apply flex flex-col;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .header-glass {
+    @apply px-4;
+  }
+
+  .page-title {
+    @apply text-xl;
+  }
+}
 </style>

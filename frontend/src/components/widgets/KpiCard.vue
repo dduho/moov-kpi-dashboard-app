@@ -74,66 +74,112 @@ const iconComponent = computed(() => {
 
 <style scoped>
 .kpi-card {
-  @apply rounded-2xl p-6 transition-all duration-200 hover:shadow-lg;
+  @apply rounded-2xl p-6 transition-all duration-300 relative overflow-hidden;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
 }
 
-/* Pastel background colors */
+.kpi-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.1));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.kpi-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+}
+
+.kpi-card:hover::before {
+  opacity: 1;
+}
+
+/* Pastel background colors with gradient */
 .bg-pastel-pink {
-  background-color: #FFE2E5;
+  background: linear-gradient(135deg, #FFE2E5 0%, #FFD1D7 100%);
 }
 
 .bg-pastel-orange {
-  background-color: #FFF4DE;
+  background: linear-gradient(135deg, #FFF4DE 0%, #FFE9C5 100%);
 }
 
 .bg-pastel-green {
-  background-color: #DCFCE7;
+  background: linear-gradient(135deg, #DCFCE7 0%, #C6F6D5 100%);
 }
 
 .bg-pastel-purple {
-  background-color: #F3E8FF;
+  background: linear-gradient(135deg, #F3E8FF 0%, #E9D5FF 100%);
 }
 
 .bg-pastel-blue {
-  background-color: #E0F2FE;
+  background: linear-gradient(135deg, #E0F2FE 0%, #BAE6FD 100%);
 }
 
 .bg-pastel-yellow {
-  background-color: #FEF3C7;
+  background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
 }
 
-/* Icon Circle */
+/* Icon Circle with glass effect */
 .icon-circle {
-  @apply w-12 h-12 rounded-full flex items-center justify-center mb-4;
+  @apply w-12 h-12 rounded-full flex items-center justify-center mb-4 shadow-lg relative;
+  animation: iconFloat 3s ease-in-out infinite;
+}
+
+@keyframes iconFloat {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
 }
 
 .icon-pink {
-  background-color: #FA5A7D;
+  background: linear-gradient(135deg, #FA5A7D, #FF7096);
+  box-shadow: 0 4px 15px rgba(250, 90, 125, 0.3);
 }
 
 .icon-orange {
-  background-color: #FF947A;
+  background: linear-gradient(135deg, #FF947A, #FFA88F);
+  box-shadow: 0 4px 15px rgba(255, 148, 122, 0.3);
 }
 
 .icon-green {
-  background-color: #3CD856;
+  background: linear-gradient(135deg, #3CD856, #4FE066);
+  box-shadow: 0 4px 15px rgba(60, 216, 86, 0.3);
 }
 
 .icon-purple {
-  background-color: #BF83FF;
+  background: linear-gradient(135deg, #BF83FF, #D09FFF);
+  box-shadow: 0 4px 15px rgba(191, 131, 255, 0.3);
 }
 
 .icon-blue {
-  background-color: #0EA5E9;
+  background: linear-gradient(135deg, #0EA5E9, #38BDF8);
+  box-shadow: 0 4px 15px rgba(14, 165, 233, 0.3);
 }
 
 .icon-yellow {
-  background-color: #F59E0B;
+  background: linear-gradient(135deg, #F59E0B, #FBBF24);
+  box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
 }
 
 /* Main Value */
 .main-value {
   @apply text-3xl font-bold text-gray-900 mb-1;
+  background: linear-gradient(135deg, #1F2937, #374151);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 /* Title */
@@ -169,6 +215,10 @@ const iconComponent = computed(() => {
 
   .main-value {
     @apply text-2xl;
+  }
+
+  .icon-circle {
+    @apply w-10 h-10;
   }
 }
 </style>

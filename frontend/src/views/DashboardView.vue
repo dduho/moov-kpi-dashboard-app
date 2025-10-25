@@ -3,13 +3,11 @@
     <!-- Section Header -->
     <div class="flex items-center justify-between mb-6">
       <div>
-        <h2 class="text-xl font-semibold text-gray-700">Today's Sales</h2>
-        <p class="text-sm text-gray-500">Sales Summary</p>
+        <h2 class="section-title">Today's Sales</h2>
+        <p class="section-subtitle">Sales Summary</p>
       </div>
-      <button class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-        </svg>
+      <button class="export-btn">
+        <IconDownload :size="18" />
         <span class="text-sm font-medium">Export</span>
       </button>
     </div>
@@ -67,7 +65,7 @@
       <!-- Charts Row 1 -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Total Revenue Chart -->
-        <div class="bg-white rounded-2xl p-6 shadow-sm">
+        <div class="chart-card">
           <div class="flex items-center justify-between mb-6">
             <h3 class="text-lg font-semibold text-gray-800">Total Revenue</h3>
             <div class="flex gap-4 text-sm">
@@ -85,7 +83,7 @@
         </div>
 
         <!-- Visitor Insights Chart -->
-        <div class="bg-white rounded-2xl p-6 shadow-sm">
+        <div class="chart-card">
           <h3 class="text-lg font-semibold text-gray-800 mb-6">Visitor Insights</h3>
           <LineChart :data="visitorChartData" :height="250" />
           <div class="flex justify-center gap-6 mt-4 text-sm">
@@ -108,7 +106,7 @@
       <!-- Charts Row 2 -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Customer Satisfaction -->
-        <div class="bg-white rounded-2xl p-6 shadow-sm">
+        <div class="chart-card">
           <h3 class="text-lg font-semibold text-gray-800 mb-6">Customer Satisfaction</h3>
           <LineChart :data="satisfactionChartData" :height="200" />
           <div class="flex justify-around mt-4">
@@ -124,7 +122,7 @@
         </div>
 
         <!-- Target vs Reality -->
-        <div class="bg-white rounded-2xl p-6 shadow-sm">
+        <div class="chart-card">
           <h3 class="text-lg font-semibold text-gray-800 mb-6">Target vs Reality</h3>
           <BarChart :data="targetChartData" :height="200" />
           <div class="mt-4 space-y-2">
@@ -152,7 +150,7 @@
         </div>
 
         <!-- Volume vs Service Level -->
-        <div class="bg-white rounded-2xl p-6 shadow-sm">
+        <div class="chart-card">
           <h3 class="text-lg font-semibold text-gray-800 mb-6">Volume vs Service Level</h3>
           <BarChart :data="volumeChartData" :height="200" />
           <div class="flex justify-center gap-6 mt-4 text-sm">
@@ -171,7 +169,7 @@
       <!-- Bottom Section -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Top Products -->
-        <div class="bg-white rounded-2xl p-6 shadow-sm">
+        <div class="chart-card">
           <h3 class="text-lg font-semibold text-gray-800 mb-6">Top Products</h3>
           <div class="space-y-4">
             <div v-for="(product, index) in topProducts" :key="index" class="flex items-center gap-4">
@@ -194,7 +192,7 @@
         </div>
 
         <!-- Sales Mapping by Country -->
-        <div class="bg-white rounded-2xl p-6 shadow-sm">
+        <div class="chart-card">
           <h3 class="text-lg font-semibold text-gray-800 mb-6">Sales Mapping by Country</h3>
           <div class="flex items-center justify-center h-64 bg-gray-100 rounded-lg">
             <p class="text-gray-500">World Map Placeholder</p>
@@ -210,6 +208,7 @@ import { ref, onMounted } from 'vue'
 import KpiCard from '@/components/widgets/KpiCard.vue'
 import BarChart from '@/components/charts/BarChart.simple.vue'
 import LineChart from '@/components/charts/LineChart.simple.vue'
+import { IconDownload } from '@/components/icons/Icons.vue'
 
 // State
 const loading = ref(false)
@@ -355,5 +354,99 @@ onMounted(() => {
 <style scoped>
 .dashboard {
   @apply max-w-full;
+}
+
+/* Section Title */
+.section-title {
+  @apply text-xl font-semibold;
+  background: linear-gradient(135deg, #1F2937, #374151);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.section-subtitle {
+  @apply text-sm text-gray-500;
+}
+
+/* Export Button with glass effect */
+.export-btn {
+  @apply flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all duration-300;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(229, 231, 235, 0.5);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.export-btn:hover {
+  background: rgba(255, 255, 255, 0.95);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(91, 95, 237, 0.1);
+  border-color: rgba(91, 95, 237, 0.2);
+}
+
+.export-btn:active {
+  transform: translateY(0);
+}
+
+/* Chart Cards with glass effect */
+.chart-card {
+  @apply rounded-2xl p-6 transition-all duration-300 relative overflow-hidden;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+}
+
+.chart-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(91, 95, 237, 0.03), rgba(91, 95, 237, 0));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.chart-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+}
+
+.chart-card:hover::before {
+  opacity: 1;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.chart-card {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+.chart-card:nth-child(1) {
+  animation-delay: 0.05s;
+}
+
+.chart-card:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.chart-card:nth-child(3) {
+  animation-delay: 0.15s;
 }
 </style>
