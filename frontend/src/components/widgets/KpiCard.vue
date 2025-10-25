@@ -13,7 +13,7 @@
 
     <!-- Trend Indicator -->
     <div class="trend-indicator" :class="trendClass">
-      <span class="trend-value">{{ trendIcon }}{{ Math.abs(trendPercentage) }}% from yesterday</span>
+      <span class="trend-value">{{ trendIcon }}{{ Math.abs(trendPercentage) }}% par rapport à hier</span>
     </div>
   </div>
 </template>

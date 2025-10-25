@@ -13,7 +13,10 @@ export const useAuthStore = defineStore('auth', () => {
   const isAuthenticated = computed(() => !!token.value)
   const userRole = computed(() => user.value?.role?.name || null)
   const userPermissions = computed(() => user.value?.role?.permissions || [])
-  const isAdmin = computed(() => userRole.value === 'admin')
+  const isAdmin = computed(() => {
+    const role = userRole.value?.toLowerCase()
+    return role === 'admin' || role === 'administrator' || role === 'superadmin'
+  })
   const isManager = computed(() => userRole.value === 'manager')
 
   // Initialize auth state from localStorage
@@ -35,13 +38,17 @@ export const useAuthStore = defineStore('auth', () => {
 
   // Login function
   const login = async (credentials) => {
+    console.log('Auth store login called with credentials:', credentials)
     loading.value = true
     error.value = null
 
     try {
+      console.log('Making axios POST request to /api/auth/login')
       const response = await axios.post('/api/auth/login', credentials)
+      console.log('Axios response received:', response)
 
       if (response.data.success) {
+        console.log('Login successful, processing response data')
         const { token: newToken, user: userData } = response.data.data
 
         // Store in state
@@ -55,14 +62,18 @@ export const useAuthStore = defineStore('auth', () => {
         // Set axios default header
         axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`
 
+        console.log('Login process completed successfully')
         return { success: true }
       } else {
+        console.log('Login failed with response:', response.data)
         throw new Error(response.data.message || 'Login failed')
       }
     } catch (err) {
+      console.error('Auth store login error:', err)
       error.value = err.response?.data?.message || err.message || 'Login failed'
       return { success: false, error: error.value }
     } finally {
+      console.log('Auth store login finally block executed')
       loading.value = false
     }
   }
@@ -97,12 +108,26 @@ export const useAuthStore = defineStore('auth', () => {
 
   // Check if user has permission
   const hasPermission = (permission) => {
-    if (!user.value || !user.value.role) return false
+    console.log('Checking permission:', permission)
+    console.log('User:', user.value)
+    console.log('User role:', userRole.value)
+    console.log('Is admin:', isAdmin.value)
+    console.log('User permissions:', userPermissions.value)
+
+    if (!user.value || !user.value.role) {
+      console.log('No user or role found, returning false')
+      return false
+    }
 
     // Admin has all permissions
-    if (isAdmin.value) return true
+    if (isAdmin.value) {
+      console.log('User is admin, granting permission')
+      return true
+    }
 
-    return userPermissions.value.some(p => p.name === permission)
+    const hasPerm = userPermissions.value.some(p => p.name === permission)
+    console.log('Permission check result:', hasPerm)
+    return hasPerm
   }
 
   // Check if user has any of the permissions

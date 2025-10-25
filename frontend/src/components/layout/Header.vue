@@ -17,7 +17,7 @@
           <v-text-field
             v-bind="props"
             :model-value="formattedDate"
-            label="Select Date Range"
+            label="Sélectionner une période"
             prepend-icon="mdi-calendar"
             readonly
             variant="outlined"
@@ -32,12 +32,12 @@
         >
           <template v-slot:default>
             <v-spacer />
-            <v-btn variant="text" @click="dateMenu = false">Cancel</v-btn>
+            <v-btn variant="text" @click="dateMenu = false">Annuler</v-btn>
             <v-btn color="primary" variant="text" @click="dateMenu = false">OK</v-btn>
           </template>
           <template v-slot:header>
             <div class="pa-2 text-caption text-medium-emphasis">
-              Note: Data is available from the next day after collection
+              Note : Les données sont disponibles le lendemain de la collecte
             </div>
           </template>
         </v-date-picker>
@@ -50,7 +50,7 @@
         prepend-icon="mdi-refresh"
         class="ml-3"
       >
-        Refresh Data
+        Actualiser les Données
       </v-btn>
     </div>
   </div>
@@ -63,11 +63,11 @@ import { format, subDays } from 'date-fns'
 const props = defineProps({
   title: {
     type: String,
-    default: 'Dashboard'
+    default: 'Tableau de Bord'
   },
   subtitle: {
     type: String,
-    default: 'Key Performance Indicators'
+    default: 'Indicateurs Clés de Performance'
   }
 })
 

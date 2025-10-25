@@ -2,39 +2,39 @@
   <div class="users">
     <div class="flex items-center justify-between mb-6">
       <div>
-        <h2 class="section-title">Active Users</h2>
-        <p class="section-subtitle">User engagement and activity metrics</p>
+        <h2 class="section-title">Utilisateurs Actifs</h2>
+        <p class="section-subtitle">Métriques d'engagement et d'activité des utilisateurs</p>
       </div>
       <button class="export-btn">
         <IconDownload :size="18" />
-        <span class="text-sm font-medium">Export</span>
+        <span class="text-sm font-medium">Exporter</span>
       </button>
     </div>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
       <KpiCard
-        title="Total Users"
+        title="Utilisateurs Totaux"
         :value="formatNumber(userKpis.totalUsers)"
         :trend="userKpis.totalTrend"
         variant="purple"
         iconType="customers"
       />
       <KpiCard
-        title="Active Today"
+        title="Actifs Aujourd'hui"
         :value="formatNumber(userKpis.activeToday)"
         :trend="userKpis.activeTrend"
         variant="blue"
         iconType="sales"
       />
       <KpiCard
-        title="New Users"
+        title="Nouveaux Utilisateurs"
         :value="formatNumber(userKpis.newUsers)"
         :trend="userKpis.newTrend"
         variant="green"
         iconType="orders"
       />
       <KpiCard
-        title="Engagement Rate"
+        title="Taux d'Engagement"
         value="${userKpis.engagementRate}%"
         :trend="userKpis.engagementTrend"
         variant="orange"
@@ -44,19 +44,19 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
       <div class="chart-card">
-        <h3 class="chart-title">User Growth Trend</h3>
+        <h3 class="chart-title">Tendance de Croissance des Utilisateurs</h3>
         <LineChart :data="userGrowthData" :height="300" />
       </div>
 
       <div class="chart-card">
-        <h3 class="chart-title">User Activity by Day</h3>
+        <h3 class="chart-title">Activité des Utilisateurs par Jour</h3>
         <BarChart :data="dailyActivityData" :height="300" />
       </div>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <div class="chart-card">
-        <h3 class="chart-title mb-4">User Segments</h3>
+        <h3 class="chart-title mb-4">Segments d'Utilisateurs</h3>
         <div class="space-y-4">
           <div v-for="segment in userSegments" :key="segment.name" class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
             <div class="flex items-center gap-4 flex-1">
@@ -65,7 +65,7 @@
               </div>
               <div>
                 <p class="font-medium text-gray-900">{{ segment.name }}</p>
-                <p class="text-sm text-gray-500">{{ formatNumber(segment.count) }} users</p>
+                <p class="text-sm text-gray-500">{{ formatNumber(segment.count) }} utilisateurs</p>
               </div>
             </div>
             <div class="text-right">
@@ -77,7 +77,7 @@
       </div>
 
       <div class="chart-card">
-        <h3 class="chart-title mb-4">Top Active Users</h3>
+        <h3 class="chart-title mb-4">Utilisateurs les Plus Actifs</h3>
         <div class="space-y-3">
           <div v-for="(user, index) in topUsers" :key="user.id" class="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition">
             <div class="flex items-center gap-3">
@@ -140,10 +140,10 @@ const dailyActivityData = ref({
 })
 
 const userSegments = ref([
-  { name: 'Premium Users', count: 8540, percentage: 18.6, status: 'success', icon: '⭐', color: '#10B981' },
-  { name: 'Regular Users', count: 28420, percentage: 62.0, status: 'info', icon: '👤', color: '#0EA5E9' },
-  { name: 'New Users', count: 6280, percentage: 13.7, status: 'warning', icon: '🆕', color: '#F59E0B' },
-  { name: 'Inactive', count: 2580, percentage: 5.7, status: 'error', icon: '💤', color: '#EF4444' }
+  { name: 'Utilisateurs Premium', count: 8540, percentage: 18.6, status: 'success', icon: '⭐', color: '#10B981' },
+  { name: 'Utilisateurs Réguliers', count: 28420, percentage: 62.0, status: 'info', icon: '👤', color: '#0EA5E9' },
+  { name: 'Nouveaux Utilisateurs', count: 6280, percentage: 13.7, status: 'warning', icon: '🆕', color: '#F59E0B' },
+  { name: 'Inactifs', count: 2580, percentage: 5.7, status: 'error', icon: '💤', color: '#EF4444' }
 ])
 
 const topUsers = ref([

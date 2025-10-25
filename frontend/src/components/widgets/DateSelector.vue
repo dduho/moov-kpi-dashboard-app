@@ -26,7 +26,7 @@ import { ref, computed } from 'vue'
 
 const emit = defineEmits(['dateChange'])
 
-const selectedValue = ref('today')
+const selectedValue = ref('7days')
 const customDate = ref('')
 
 const maxDate = computed(() => {
@@ -35,10 +35,10 @@ const maxDate = computed(() => {
 })
 
 const dateOptions = [
-  { label: 'Today', value: 'today' },
-  { label: 'Yesterday', value: 'yesterday' },
-  { label: 'Last 7 days', value: '7days' },
-  { label: 'Last 30 days', value: '30days' }
+  { label: 'Aujourd\'hui', value: 'today' },
+  { label: 'Hier', value: 'yesterday' },
+  { label: '7 derniers jours', value: '7days' },
+  { label: '30 derniers jours', value: '30days' }
 ]
 
 const getDateString = (daysAgo = 0) => {
@@ -87,8 +87,8 @@ const selectCustomDate = () => {
   }
 }
 
-// Initialize with today
-selectDate('yesterday')
+// Initialize with 7 days
+selectDate('7days')
 </script>
 
 <style scoped>

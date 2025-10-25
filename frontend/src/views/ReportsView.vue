@@ -2,36 +2,36 @@
   <div class="reports">
     <div class="flex items-center justify-between mb-6">
       <div>
-        <h2 class="section-title">Reports & Export</h2>
-        <p class="section-subtitle">Generate and download custom reports</p>
+        <h2 class="section-title">Rapports & Export</h2>
+        <p class="section-subtitle">Générer et télécharger des rapports personnalisés</p>
       </div>
     </div>
 
     <!-- Quick Stats -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
       <KpiCard
-        title="Total Reports"
+        title="Rapports Totaux"
         :value="String(reportKpis.totalReports)"
         :trend="0"
         variant="blue"
         iconType="sales"
       />
       <KpiCard
-        title="Last 30 Days"
+        title="30 Derniers Jours"
         :value="String(reportKpis.lastMonthReports)"
         :trend="reportKpis.monthTrend"
         variant="green"
         iconType="orders"
       />
       <KpiCard
-        title="Scheduled"
+        title="Programmés"
         :value="String(reportKpis.scheduledReports)"
         :trend="0"
         variant="purple"
         iconType="products"
       />
       <KpiCard
-        title="Automated"
+        title="Automatisés"
         :value="String(reportKpis.automatedReports)"
         :trend="reportKpis.automatedTrend"
         variant="orange"
@@ -41,7 +41,7 @@
 
     <!-- Report Templates -->
     <div class="chart-card mb-6">
-      <h3 class="chart-title mb-4">Report Templates</h3>
+      <h3 class="chart-title mb-4">Modèles de Rapport</h3>
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <div v-for="template in reportTemplates" :key="template.id" class="report-template-card">
           <div class="flex items-start justify-between mb-3">
@@ -54,7 +54,7 @@
           <p class="text-sm text-gray-500 mb-4">{{ template.description }}</p>
           <button class="generate-btn">
             <IconDownload :size="16" />
-            <span>Generate Report</span>
+            <span>Générer le Rapport</span>
           </button>
         </div>
       </div>
@@ -63,10 +63,10 @@
     <!-- Recent Reports -->
     <div class="chart-card">
       <div class="flex items-center justify-between mb-4">
-        <h3 class="chart-title">Recent Reports</h3>
+        <h3 class="chart-title">Rapports Récents</h3>
         <div class="search-container-sm">
           <IconSearch :size="16" class="search-icon-sm" />
-          <input type="text" placeholder="Search..." class="search-input-sm" v-model="searchQuery" />
+          <input type="text" placeholder="Rechercher..." class="search-input-sm" v-model="searchQuery" />
         </div>
       </div>
 
@@ -74,11 +74,11 @@
         <table class="data-table">
           <thead>
             <tr>
-              <th>Report Name</th>
+              <th>Nom du Rapport</th>
               <th>Type</th>
-              <th>Generated</th>
-              <th>Size</th>
-              <th>Status</th>
+              <th>Généré</th>
+              <th>Taille</th>
+              <th>Statut</th>
               <th>Action</th>
             </tr>
           </thead>
@@ -96,7 +96,7 @@
               <td>
                 <button class="download-btn-sm">
                   <IconDownload :size="14" />
-                  Download
+                  Télécharger
                 </button>
               </td>
             </tr>
@@ -126,51 +126,51 @@ const reportKpis = ref({
 const reportTemplates = ref([
   {
     id: 1,
-    name: 'Daily KPI Summary',
-    description: 'Daily performance metrics and KPIs',
+    name: 'Résumé KPI Journalier',
+    description: 'Métriques de performance quotidiennes et KPI',
     icon: '📊',
     color: '#0EA5E9',
-    frequency: 'Daily'
+    frequency: 'Quotidien'
   },
   {
     id: 2,
-    name: 'Transaction Report',
-    description: 'Detailed transaction breakdown',
+    name: 'Rapport de Transactions',
+    description: 'Répartition détaillée des transactions',
     icon: '💳',
     color: '#10B981',
-    frequency: 'Weekly'
+    frequency: 'Hebdomadaire'
   },
   {
     id: 3,
-    name: 'Revenue Analysis',
-    description: 'Revenue by channel and source',
+    name: 'Analyse des Revenus',
+    description: 'Revenus par canal et source',
     icon: '💰',
     color: '#F59E0B',
-    frequency: 'Monthly'
+    frequency: 'Mensuel'
   },
   {
     id: 4,
-    name: 'User Analytics',
-    description: 'User engagement and activity',
+    name: 'Analyses Utilisateurs',
+    description: 'Engagement et activité des utilisateurs',
     icon: '👥',
     color: '#A855F7',
-    frequency: 'Weekly'
+    frequency: 'Hebdomadaire'
   },
   {
     id: 5,
-    name: 'IMT Summary',
-    description: 'International money transfer stats',
+    name: 'Résumé IMT',
+    description: 'Statistiques des transferts d\'argent internationaux',
     icon: '🌍',
     color: '#EC4899',
-    frequency: 'Monthly'
+    frequency: 'Mensuel'
   },
   {
     id: 6,
-    name: 'Custom Report',
-    description: 'Build your own custom report',
+    name: 'Rapport Personnalisé',
+    description: 'Créez votre propre rapport personnalisé',
     icon: '⚙️',
     color: '#6366F1',
-    frequency: 'On-demand'
+    frequency: 'À la demande'
   }
 ])
 

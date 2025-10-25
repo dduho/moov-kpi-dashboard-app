@@ -10,6 +10,12 @@ COPY frontend/package*.json ./
 # Install dependencies
 RUN npm install
 
+# Install curl for health checks
+RUN apk add --no-cache curl
+
+# Copy environment file
+COPY frontend/.env ./
+
 # Copy source code
 COPY frontend/ ./
 

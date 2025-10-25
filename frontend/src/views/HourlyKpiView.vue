@@ -2,39 +2,39 @@
   <div class="hourly-kpis">
     <div class="flex items-center justify-between mb-6">
       <div>
-        <h2 class="section-title">Hourly KPIs</h2>
-        <p class="section-subtitle">Hourly performance breakdown</p>
+        <h2 class="section-title">KPI Horaires</h2>
+        <p class="section-subtitle">Répartition des performances horaires</p>
       </div>
       <button class="export-btn">
         <IconDownload :size="18" />
-        <span class="text-sm font-medium">Export</span>
+        <span class="text-sm font-medium">Exporter</span>
       </button>
     </div>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
       <KpiCard
-        title="Peak Hour"
+        title="Heure de Pointe"
         value="14:00"
         :trend="0"
         variant="pink"
         iconType="sales"
       />
       <KpiCard
-        title="Avg/Hour"
+        title="Moyenne/Heure"
         :value="formatNumber(hourlyKpis.avgPerHour)"
         :trend="hourlyKpis.avgTrend"
         variant="orange"
         iconType="orders"
       />
       <KpiCard
-        title="Total Today"
+        title="Total Aujourd'hui"
         :value="formatNumber(hourlyKpis.totalToday)"
         :trend="hourlyKpis.totalTrend"
         variant="green"
         iconType="products"
       />
       <KpiCard
-        title="Current Hour"
+        title="Heure Actuelle"
         :value="formatNumber(hourlyKpis.currentHour)"
         :trend="hourlyKpis.currentTrend"
         variant="blue"
@@ -43,12 +43,12 @@
     </div>
 
     <div class="chart-card mb-6">
-      <h3 class="chart-title">Hourly Distribution (Today)</h3>
+      <h3 class="chart-title">Distribution Horaire (Aujourd'hui)</h3>
       <LineChart :data="hourlyDistributionData" :height="350" />
     </div>
 
     <div class="chart-card">
-      <h3 class="chart-title">Hourly Comparison (This Week)</h3>
+      <h3 class="chart-title">Comparaison Horaire (Cette Semaine)</h3>
       <BarChart :data="hourlyComparisonData" :height="300" />
     </div>
   </div>

@@ -41,30 +41,18 @@
     </nav>
 
     <!-- Settings & Sign Out -->
-    <div class="absolute bottom-52 left-0 right-0 px-2 space-y-1">
+    <div class="absolute bottom-5 left-0 right-0 px-2 space-y-1">
       <router-link to="/settings" class="nav-item" v-if="hasPermission('system:settings')">
         <IconSettings :size="20" class="flex-shrink-0" />
-        <span v-if="isOpen" class="ml-3 font-medium">Settings</span>
+        <span v-if="isOpen" class="ml-3 font-medium">Paramètres</span>
       </router-link>
       <button @click="handleLogout" class="nav-item w-full text-left">
         <IconLogout :size="20" class="flex-shrink-0" />
-        <span v-if="isOpen" class="ml-3 font-medium">Sign Out</span>
+        <span v-if="isOpen" class="ml-3 font-medium">Déconnexion</span>
       </button>
     </div>
 
-    <!-- Pro Section (Bottom) -->
-    <div v-if="isOpen" class="absolute bottom-6 left-4 right-4">
-      <div class="pro-card">
-        <div class="pro-icon-circle">
-          <IconBadgeCheck :size="24" />
-        </div>
-        <h3 class="text-sm font-bold mb-1">Moov Pulse</h3>
-        <p class="text-xs opacity-90 mb-3">Get access to all features</p>
-        <button class="pro-btn">
-          Get Pro
-        </button>
-      </div>
-    </div>
+   
 
     <!-- Mobile Overlay -->
     <div
@@ -100,19 +88,19 @@ const isOpen = ref(window.innerWidth >= 1024) // Closed on mobile by default
 const menuItems = [
   {
     path: '/',
-    label: 'Dashboard',
+    label: 'Tableau de Bord',
     icon: IconDashboard,
     permission: 'dashboard:view'
   },
   {
     path: '/daily-kpis',
-    label: 'Daily KPIs',
+    label: 'KPI Journaliers',
     icon: IconLeaderboard,
     permission: 'kpis:view'
   },
   {
     path: '/hourly-kpis',
-    label: 'Hourly KPIs',
+    label: 'KPI Horaires',
     icon: IconSalesReport,
     permission: 'kpis:view'
   },
@@ -124,19 +112,19 @@ const menuItems = [
   },
   {
     path: '/revenue',
-    label: 'Revenue',
+    label: 'Revenus',
     icon: IconSalesReport,
     permission: 'revenue:view'
   },
   {
     path: '/users',
-    label: 'Users',
+    label: 'Utilisateurs',
     icon: IconProducts,
     permission: 'users:view'
   },
   {
     path: '/reports',
-    label: 'Reports',
+    label: 'Rapports',
     icon: IconMessages,
     permission: 'export:view'
   }
@@ -144,10 +132,11 @@ const menuItems = [
 
 // Filter menu items based on permissions
 const filteredMenuItems = computed(() => {
-  return menuItems.filter(item => {
-    if (!item.permission) return true
-    return authStore.hasPermission(item.permission)
-  })
+  // TEMPORARILY DISABLE PERMISSION CHECKS FOR DEBUGGING
+  console.log('🔍 SIDEBAR DEBUG: All menu items (permissions disabled)');
+  console.log('Current user permissions:', authStore.permissions);
+  console.log('Is admin:', authStore.isAdmin);
+  return menuItems; // Return all items temporarily
 })
 
 // Helper function for permission checking
@@ -177,6 +166,9 @@ const handleResize = () => {
 }
 
 onMounted(() => {
+  console.log('🔍 SIDEBAR: Component mounted');
+  console.log('🔍 SIDEBAR: isOpen initial value:', isOpen.value);
+  console.log('🔍 SIDEBAR: filteredMenuItems:', filteredMenuItems.value);
   window.addEventListener('resize', handleResize)
 })
 

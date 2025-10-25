@@ -9,20 +9,20 @@
           </svg>
         </div>
         <h1 class="app-title">Moov Pulse</h1>
-        <p class="app-subtitle">KPI Dashboard</p>
+        <p class="app-subtitle">Tableau de Bord KPI</p>
       </div>
 
       <!-- Login Form -->
       <form v-if="formReady" @submit.prevent="handleLogin" class="login-form" autocomplete="on">
         <div class="form-group">
-          <label for="username" class="form-label">Username</label>
+          <label for="username" class="form-label">Nom d'utilisateur</label>
           <input
             id="username"
             v-model="form.username"
             name="username"
             type="text"
             class="form-input"
-            placeholder="Enter your username"
+            placeholder="Entrez votre nom d'utilisateur"
             autocomplete="username"
             autocorrect="off"
             autocapitalize="none"
@@ -32,14 +32,14 @@
         </div>
 
         <div class="form-group">
-          <label for="password" class="form-label">Password</label>
+          <label for="password" class="form-label">Mot de passe</label>
           <input
             id="password"
             v-model="form.password"
             name="password"
             type="password"
             class="form-input"
-            placeholder="Enter your password"
+            placeholder="Entrez votre mot de passe"
             autocomplete="current-password"
             autocorrect="off"
             autocapitalize="none"
@@ -52,9 +52,12 @@
           type="submit"
           :disabled="loading"
           class="login-btn"
+          @click="console.log('Button clicked, loading value:', loading)"
+          @mousedown.prevent
+          @touchstart.prevent
         >
           <span v-if="loading" class="loading-spinner"></span>
-          {{ loading ? 'Signing in...' : 'Sign In' }}
+          {{ loading ? 'Connexion en cours...' : 'Se connecter' }}
         </button>
       </form>
 
@@ -65,16 +68,16 @@
 
       <!-- Demo Credentials -->
       <div class="demo-info">
-        <p class="demo-title">Demo Credentials:</p>
-        <p class="demo-cred">Username: <strong>admin</strong></p>
-        <p class="demo-cred">Password: <strong>p@ssw0rd</strong></p>
+        <p class="demo-title">Identifiants de démonstration :</p>
+        <p class="demo-cred">Nom d'utilisateur : <strong>admin</strong></p>
+        <p class="demo-cred">Mot de passe : <strong>p@ssw0rd</strong></p>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, nextTick, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
@@ -90,6 +93,11 @@ const loading = ref(false)
 const error = ref('')
 const formReady = ref(false)
 
+// Watch loading value changes
+watch(loading, (newValue, oldValue) => {
+  console.log('Loading value changed from', oldValue, 'to', newValue)
+})
+
 // Initialize form after component mount to ensure proper autofill compatibility
 onMounted(() => {
   // Small delay to ensure DOM is fully ready for autofill extensions
@@ -100,28 +108,82 @@ onMounted(() => {
 
 // NOTE: Redirection for authenticated users is handled centrally in the router guard.
 
-const handleLogin = async () => {
+const handleLogin = async (event) => {
+  console.log('handleLogin called with form:', form.value, 'event:', event)
+
+  // Prevent default form submission if event is provided
+  if (event) {
+    event.preventDefault()
+  }
+
   if (!form.value.username || !form.value.password) {
-    error.value = 'Please fill in all fields'
+    error.value = 'Veuillez remplir tous les champs'
     return
   }
 
   loading.value = true
   error.value = ''
+  console.log('Starting login process...')
 
   try {
-    const result = await authStore.login(form.value)
+    // Add a small delay to let extensions finish their checks
+    await new Promise(resolve => setTimeout(resolve, 100))
+    console.log('Delay completed, proceeding with login')
+
+    // Add timeout to prevent infinite loading
+    const loginPromise = authStore.login(form.value)
+    console.log('Login promise created')
+
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => {
+        console.log('Login timeout reached')
+        reject(new Error('Login request timed out'))
+      }, 30000)
+    )
+
+    console.log('Starting Promise.race...')
+    const result = await Promise.race([loginPromise, timeoutPromise])
+    console.log('Promise.race resolved with result:', result)
 
     if (result.success) {
-      // Redirect to dashboard - the store handles the state update
-      router.push('/')
+      console.log('Login successful, redirecting to dashboard')
+      console.log('Current route before redirect:', router.currentRoute.value.path)
+      console.log('Auth store isAuthenticated:', authStore.isAuthenticated)
+      console.log('Auth store user:', authStore.user)
+
+      try {
+        // Redirect to dashboard - the store handles the state update
+        await router.push('/')
+        console.log('Router.push completed successfully')
+        console.log('Current route after redirect:', router.currentRoute.value.path)
+      } catch (routerError) {
+        console.error('Router.push failed:', routerError)
+      }
     } else {
-      error.value = result.error || 'Login failed. Please try again.'
+      console.log('Login failed with error:', result.error)
+      error.value = result.error || 'Échec de la connexion. Veuillez réessayer.'
     }
   } catch (err) {
-    error.value = err.response?.data?.message || 'Login failed. Please try again.'
+    console.error('Login error caught:', err)
+    if (err.message === 'Login request timed out') {
+      error.value = 'Délai d\'attente de la requête de connexion dépassé. Veuillez vérifier votre connexion et réessayer.'
+    } else {
+      error.value = err.response?.data?.message || err.message || 'Échec de la connexion. Veuillez réessayer.'
+    }
   } finally {
+    console.log('Login process finished, setting loading to false')
+    console.log('Loading value before setting to false:', loading.value)
     loading.value = false
+    console.log('Loading value after setting to false:', loading.value)
+    console.log('Auth store loading value:', authStore.loading)
+
+    // Force reactivity update with multiple approaches
+    nextTick(() => {
+      console.log('After nextTick, loading value:', loading.value)
+      // Additional force update
+      loading.value = false
+      console.log('After force update, loading value:', loading.value)
+    })
   }
 }
 </script>

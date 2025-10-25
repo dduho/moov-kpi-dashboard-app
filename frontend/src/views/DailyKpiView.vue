@@ -3,17 +3,17 @@
     <!-- Header Section -->
     <div class="flex items-center justify-between mb-6">
       <div>
-        <h2 class="section-title">Daily KPIs</h2>
-        <p class="section-subtitle">Daily performance metrics and trends</p>
+        <h2 class="section-title">KPI Journaliers</h2>
+        <p class="section-subtitle">Métriques de performance quotidiennes et tendances</p>
       </div>
       <div class="flex gap-3">
         <button class="glass-btn">
-          <span class="text-sm font-medium">Last 7 Days</span>
+          <span class="text-sm font-medium">7 Derniers Jours</span>
           <IconChevronDown :size="16" class="text-gray-500" />
         </button>
         <button class="export-btn">
           <IconDownload :size="18" />
-          <span class="text-sm font-medium">Export</span>
+          <span class="text-sm font-medium">Exporter</span>
         </button>
       </div>
     </div>
@@ -21,28 +21,28 @@
     <!-- KPI Cards -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
       <KpiCard
-        title="Total Transactions"
+        title="Transactions Totales"
         :value="formatNumber(dailyKpis.totalTransactions)"
         :trend="dailyKpis.transactionsTrend"
         variant="blue"
         iconType="sales"
       />
       <KpiCard
-        title="Total Volume"
+        title="Volume Total"
         :value="formatCurrency(dailyKpis.totalVolume)"
         :trend="dailyKpis.volumeTrend"
         variant="green"
         iconType="orders"
       />
       <KpiCard
-        title="Active Users"
+        title="Utilisateurs Actifs"
         :value="formatNumber(dailyKpis.activeUsers)"
         :trend="dailyKpis.usersTrend"
         variant="purple"
         iconType="customers"
       />
       <KpiCard
-        title="Success Rate"
+        title="Taux de Succès"
         value="${dailyKpis.successRate}%"
         :trend="dailyKpis.successRateTrend"
         variant="orange"
@@ -53,12 +53,12 @@
     <!-- Charts Section -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
       <div class="chart-card">
-        <h3 class="chart-title">Daily Transactions Trend</h3>
+        <h3 class="chart-title">Tendance des Transactions Journalières</h3>
         <LineChart :data="transactionsTrendData" :height="300" />
       </div>
 
       <div class="chart-card">
-        <h3 class="chart-title">Volume by Day</h3>
+        <h3 class="chart-title">Volume par Jour</h3>
         <BarChart :data="volumeByDayData" :height="300" />
       </div>
     </div>
@@ -66,10 +66,10 @@
     <!-- Data Table -->
     <div class="chart-card">
       <div class="flex items-center justify-between mb-4">
-        <h3 class="chart-title">Daily Breakdown</h3>
+        <h3 class="chart-title">Répartition Journalière</h3>
         <div class="search-container-sm">
           <IconSearch :size="16" class="search-icon-sm" />
-          <input type="text" placeholder="Search..." class="search-input-sm" v-model="searchQuery" />
+          <input type="text" placeholder="Rechercher..." class="search-input-sm" v-model="searchQuery" />
         </div>
       </div>
 
@@ -80,9 +80,9 @@
               <th>Date</th>
               <th>Transactions</th>
               <th>Volume (XOF)</th>
-              <th>Active Users</th>
-              <th>Success Rate</th>
-              <th>Status</th>
+              <th>Utilisateurs Actifs</th>
+              <th>Taux de Succès</th>
+              <th>Statut</th>
             </tr>
           </thead>
           <tbody>
@@ -98,7 +98,7 @@
               </td>
               <td>
                 <span class="status-badge" :class="row.successRate >= 95 ? 'status-success' : 'status-warning'">
-                  {{ row.successRate >= 95 ? 'Good' : 'Average' }}
+                  {{ row.successRate >= 95 ? 'Bon' : 'Moyen' }}
                 </span>
               </td>
             </tr>

@@ -3,14 +3,14 @@
     <!-- Header avec tabs -->
     <div class="flex items-center justify-between mb-6">
       <div>
-        <h2 class="section-title">KPI Dashboard</h2>
-        <p class="section-subtitle">Comprehensive business metrics & analytics</p>
+        <h2 class="section-title">Tableau de Bord KPI</h2>
+        <p class="section-subtitle">Métriques d'affaires complètes et analyses</p>
       </div>
       <div class="flex gap-3">
         <DateSelector @dateChange="handleDateChange" />
         <button class="export-btn" @click="exportData">
           <IconDownload :size="18" />
-          <span class="text-sm font-medium">Export</span>
+          <span class="text-sm font-medium">Exporter</span>
         </button>
       </div>
     </div>
@@ -18,17 +18,17 @@
     <!-- Loading State -->
     <div v-if="loading" class="loading-container">
       <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
-      <p class="mt-4 text-gray-600">Loading dashboard data...</p>
+      <p class="mt-4 text-gray-600">Chargement des données du tableau de bord...</p>
     </div>
 
     <!-- Error State -->
     <div v-else-if="error" class="error-container">
       <div class="text-error-600 mb-4">
-        <p class="font-semibold">Error loading dashboard data</p>
+        <p class="font-semibold">Erreur lors du chargement des données du tableau de bord</p>
         <p class="text-sm mt-2">{{ error }}</p>
       </div>
       <button @click="refreshData" class="glass-btn">
-        <span class="text-sm font-medium">Retry</span>
+        <span class="text-sm font-medium">Réessayer</span>
       </button>
     </div>
 
@@ -486,7 +486,7 @@ const tabs = [
   { id: 'retention', label: 'Rétention' },
   { id: 'transactions', label: 'Transactions' },
   { id: 'revenue', label: 'Revenus' },
-  { id: 'merchants', label: 'Merchants' },
+  { id: 'merchants', label: 'Marchands' },
   { id: 'agents', label: 'Agents' },
   { id: 'channels', label: 'Canaux' }
 ]
@@ -495,6 +495,7 @@ const tabs = [
 const loading = ref(true)
 const error = ref(null)
 const currentDateParams = ref({})
+const apiTestResult = ref(null)
 
 // Data from API
 const dashboardData = ref(null)
@@ -629,7 +630,7 @@ const fetchAllData = async (dateParams) => {
                       agentData.value || channelData.value || usersData.value || revenueData.value
 
     if (!hasAnyData) {
-      error.value = 'No data available for the selected period. The database might be empty or the date range contains no data.'
+      error.value = 'Aucune donnée disponible pour la période sélectionnée. La base de données pourrait être vide ou la plage de dates ne contient aucune donnée.'
     } else {
       error.value = null // Clear any previous error if we have data
     }
@@ -637,7 +638,7 @@ const fetchAllData = async (dateParams) => {
     loading.value = false
   } catch (err) {
     console.error('Error fetching dashboard data:', err)
-    error.value = err.message || 'Failed to load dashboard data'
+    error.value = err.message || 'Échec du chargement des données du tableau de bord'
     loading.value = false
   }
 }
@@ -862,18 +863,31 @@ const getHeatmapColor = (value) => {
   return '#EF4444'
 }
 
+const testApi = async () => {
+  console.log('Testing API call from dashboard...')
+  try {
+    const response = await apiService.getDashboardData({ date: '20241024' })
+    apiTestResult.value = JSON.stringify(response.data, null, 2)
+    console.log('API test successful:', response.data)
+  } catch (err) {
+    apiTestResult.value = `Error: ${err.message}`
+    console.error('API test failed:', err)
+  }
+}
+
 // Lifecycle
 onMounted(() => {
+  console.log('DashboardView mounted - component loaded successfully')
   // Load default data (yesterday) on mount
   const yesterday = new Date()
   yesterday.setDate(yesterday.getDate() - 1)
   const dateStr = yesterday.toISOString().split('T')[0].replace(/-/g, '')
+  console.log('DashboardView: Loading data for date:', dateStr)
   fetchAllData({ date: dateStr })
 })
 </script>
 
 <style scoped>
-@import './views-styles.css';
 
 .loading-container {
   @apply flex flex-col items-center justify-center py-24;

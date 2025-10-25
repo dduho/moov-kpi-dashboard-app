@@ -2,18 +2,18 @@
   <div class="revenue">
     <div class="flex items-center justify-between mb-6">
       <div>
-        <h2 class="section-title">Revenue Analysis</h2>
-        <p class="section-subtitle">Revenue breakdown by channel and source</p>
+        <h2 class="section-title">Analyse des Revenus</h2>
+        <p class="section-subtitle">Répartition des revenus par canal et source</p>
       </div>
       <button class="export-btn">
         <IconDownload :size="18" />
-        <span class="text-sm font-medium">Export</span>
+        <span class="text-sm font-medium">Exporter</span>
       </button>
     </div>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
       <KpiCard
-        title="Total Revenue"
+        title="Revenus Totaux"
         :value="formatCurrency(revenueKpis.totalRevenue)"
         :trend="revenueKpis.revenueTrend"
         variant="green"
@@ -27,14 +27,14 @@
         iconType="orders"
       />
       <KpiCard
-        title="Merchant"
+        title="Marchand"
         :value="formatCurrency(revenueKpis.merchant)"
         :trend="revenueKpis.merchantTrend"
         variant="purple"
         iconType="products"
       />
       <KpiCard
-        title="Others"
+        title="Autres"
         :value="formatCurrency(revenueKpis.others)"
         :trend="revenueKpis.othersTrend"
         variant="orange"
@@ -44,18 +44,18 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
       <div class="chart-card">
-        <h3 class="chart-title">Revenue by Channel</h3>
+        <h3 class="chart-title">Revenus par Canal</h3>
         <BarChart :data="revenueByChannelData" :height="300" />
       </div>
 
       <div class="chart-card">
-        <h3 class="chart-title">Monthly Revenue Trend</h3>
+        <h3 class="chart-title">Tendance des Revenus Mensuels</h3>
         <LineChart :data="monthlyRevenueData" :height="300" />
       </div>
     </div>
 
     <div class="chart-card">
-      <h3 class="chart-title mb-4">Channel Performance</h3>
+      <h3 class="chart-title mb-4">Performance par Canal</h3>
       <div class="space-y-4">
         <div v-for="channel in channelPerformance" :key="channel.name" class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
           <div class="flex items-center gap-4 flex-1">
@@ -98,9 +98,9 @@ const revenueKpis = ref({
 })
 
 const revenueByChannelData = ref({
-  labels: ['Mobile Money', 'Merchant', 'Bill Payment', 'IMT', 'Others'],
+  labels: ['Mobile Money', 'Marchand', 'Paiement de Factures', 'IMT', 'Autres'],
   datasets: [{
-    label: 'Revenue (M XOF)',
+    label: 'Revenus (M XOF)',
     data: [280, 125, 68, 52, 45],
     backgroundColor: ['#10B981', '#A855F7', '#F59E0B', '#0EA5E9', '#EC4899']
   }]
@@ -120,10 +120,10 @@ const monthlyRevenueData = ref({
 
 const channelPerformance = ref([
   { name: 'Mobile Money', revenue: 280000000, percentage: 62, growth: 18.2, color: '#10B981' },
-  { name: 'Merchant', revenue: 125000000, percentage: 28, growth: 11.5, color: '#A855F7' },
-  { name: 'Bill Payment', revenue: 68000000, percentage: 15, growth: 9.3, color: '#F59E0B' },
+  { name: 'Marchand', revenue: 125000000, percentage: 28, growth: 11.5, color: '#A855F7' },
+  { name: 'Paiement de Factures', revenue: 68000000, percentage: 15, growth: 9.3, color: '#F59E0B' },
   { name: 'IMT', revenue: 52000000, percentage: 12, growth: 14.1, color: '#0EA5E9' },
-  { name: 'Others', revenue: 45000000, percentage: 10, growth: -2.5, color: '#EC4899' }
+  { name: 'Autres', revenue: 45000000, percentage: 10, growth: -2.5, color: '#EC4899' }
 ])
 
 const formatCurrency = (value) => new Intl.NumberFormat('en-US', {

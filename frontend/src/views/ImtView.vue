@@ -2,12 +2,12 @@
   <div class="imt-transactions">
     <div class="flex items-center justify-between mb-6">
       <div>
-        <h2 class="section-title">IMT Transactions</h2>
-        <p class="section-subtitle">International Money Transfer analytics</p>
+        <h2 class="section-title">Transactions IMT</h2>
+        <p class="section-subtitle">Analyses des transferts d'argent internationaux</p>
       </div>
       <button class="export-btn">
         <IconDownload :size="18" />
-        <span class="text-sm font-medium">Export</span>
+        <span class="text-sm font-medium">Exporter</span>
       </button>
     </div>
 
@@ -20,21 +20,21 @@
         iconType="sales"
       />
       <KpiCard
-        title="Total Volume"
+        title="Volume Total"
         :value="formatCurrency(imtKpis.totalVolume)"
         :trend="imtKpis.volumeTrend"
         variant="blue"
         iconType="orders"
       />
       <KpiCard
-        title="Avg Amount"
+        title="Montant Moyen"
         :value="formatCurrency(imtKpis.avgAmount)"
         :trend="imtKpis.avgTrend"
         variant="green"
         iconType="products"
       />
       <KpiCard
-        title="Countries"
+        title="Pays"
         :value="String(imtKpis.countriesCount)"
         :trend="imtKpis.countriesTrend"
         variant="orange"
@@ -44,27 +44,27 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
       <div class="chart-card">
-        <h3 class="chart-title">Top Destination Countries</h3>
+        <h3 class="chart-title">Pays de Destination Principaux</h3>
         <BarChart :data="topCountriesData" :height="300" />
       </div>
 
       <div class="chart-card">
-        <h3 class="chart-title">Monthly Trend</h3>
+        <h3 class="chart-title">Tendance Mensuelle</h3>
         <LineChart :data="monthlyTrendData" :height="300" />
       </div>
     </div>
 
     <div class="chart-card">
-      <h3 class="chart-title mb-4">Recent IMT Transactions</h3>
+      <h3 class="chart-title mb-4">Transactions IMT Récentes</h3>
       <div class="overflow-x-auto">
         <table class="data-table">
           <thead>
             <tr>
-              <th>Transaction ID</th>
+              <th>ID Transaction</th>
               <th>Date</th>
-              <th>Country</th>
-              <th>Amount (XOF)</th>
-              <th>Status</th>
+              <th>Pays</th>
+              <th>Montant (XOF)</th>
+              <th>Statut</th>
             </tr>
           </thead>
           <tbody>
