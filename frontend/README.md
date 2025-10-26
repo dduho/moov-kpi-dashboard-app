@@ -131,6 +131,31 @@ Pre-built component classes are available in `main.css`:
 
 The frontend communicates with the backend API through the `services/api.js` file. Make sure the backend is running and the API base URL is correctly configured in the `.env` file.
 
+### Environment-Specific Configuration
+
+- **Local Development**: Use `VITE_API_BASE_URL=http://localhost:8000/api` in your `.env` file
+- **Docker Development**: Docker Compose automatically sets `VITE_API_BASE_URL=http://backend:8000/api`
+
+### Troubleshooting
+
+**Error: `ERR_NAME_NOT_RESOLVED` for `http://backend:8000`**
+
+This error occurs when the frontend tries to reach the backend using the Docker service name "backend" from your browser. To fix:
+
+1. Make sure you have a `.env` file in the frontend directory:
+   ```bash
+   cp .env.example .env
+   ```
+
+2. Verify that `VITE_API_BASE_URL` is set to `http://localhost:8000/api` (not `http://backend:8000/api`)
+
+3. Restart the development server:
+   ```bash
+   npm run dev
+   ```
+
+**Note**: The Docker service name "backend" only works within the Docker network. When accessing the app from your browser, you need to use `localhost`.
+
 ## Contributing
 
 1. Follow the existing code style
