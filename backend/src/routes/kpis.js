@@ -3,13 +3,13 @@ const router = express.Router()
 const kpiController = require('../controllers/kpiController')
 const { authenticateJWT } = require('../middleware/auth')
 
-router.get('/daily', authenticateJWT, kpiController.getDailyKpis)
-router.get('/daily/range', authenticateJWT, kpiController.getDailyKpisByDateRange)
-router.get('/hourly', authenticateJWT, kpiController.getHourlyKpis)
-router.get('/weekly', authenticateJWT, kpiController.getWeeklyKpis)
-router.get('/active-users', authenticateJWT, kpiController.getActiveUsers)
-router.get('/hourly-performance', authenticateJWT, kpiController.getHourlyPerformance)
-router.get('/comparative-analytics', authenticateJWT, kpiController.getComparativeAnalytics)
+router.get('/daily', authenticateJWT, (req, res, next) => kpiController.getDailyKpis(req, res, next))
+router.get('/daily/range', authenticateJWT, (req, res, next) => kpiController.getDailyKpisByDateRange(req, res, next))
+router.get('/hourly', authenticateJWT, (req, res, next) => kpiController.getHourlyKpis(req, res, next))
+router.get('/weekly', authenticateJWT, (req, res, next) => kpiController.getWeeklyKpis(req, res, next))
+router.get('/active-users', authenticateJWT, (req, res, next) => kpiController.getActiveUsers(req, res, next))
+router.get('/hourly-performance', authenticateJWT, (req, res, next) => kpiController.getHourlyPerformance(req, res, next))
+router.get('/comparative-analytics', authenticateJWT, (req, res, next) => kpiController.getComparativeAnalytics(req, res, next))
 
 // Temporary test endpoints without auth for testing
 router.get('/weekly-test', async (req, res) => {

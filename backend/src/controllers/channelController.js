@@ -1,6 +1,4 @@
-const DailyKpi = require('../models/DailyKpi')
-const HourlyKpi = require('../models/HourlyKpi')
-const RevenueByChannel = require('../models/RevenueByChannel')
+const { DailyKpi, HourlyKpi, RevenueByChannel } = require('../models')
 const cacheService = require('../services/cacheService')
 
 class ChannelController {

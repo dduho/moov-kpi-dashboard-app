@@ -9,14 +9,14 @@ class ExcelParserService {
       logger.info(`Starting to parse files for date: ${date}`)
 
       const files = [
-        { pattern: /【MMTG-Tools】Daily KPI - \d{8}\.xlsx$/, model: 'daily' },
-        { pattern: /【MMTG-Tools】Hourly KPI - \d{8}\.xlsx$/, model: 'hourly' },
-        { pattern: /【MMTG-Tools】IMT Hourly - \d{8}\.xlsx$/, model: 'imt' },
-        { pattern: /【MMTG-Tools】Revenue Compare - \d{8}\.xlsx$/, model: 'revenue' },
-        { pattern: /【MMTG-Tools】Active Users - \d{8}\.xlsx$/, model: 'active' },
-        { pattern: /【MMTG-Tools】Weekly KPI - \d{8}\.xlsx$/, model: 'weekly' },
-        { pattern: /【MMTG-Tools】Hourly Performance - \d{8}\.xlsx$/, model: 'hourly_performance' },
-        { pattern: /【MMTG-Tools】Comparative Analytics - \d{8}\.xlsx$/, model: 'comparative' }
+        { pattern: /【MMTG-Tools】Daily KPI - \d{8}\.xlsx$/i, model: 'daily' },
+        { pattern: /【MMTG-Tools】Hourly KPI - \d{8}\.xlsx$/i, model: 'hourly' },
+        { pattern: /【MMTG-Tools】IMT Hourly - \d{8}\.xlsx$/i, model: 'imt' },
+        { pattern: /【MMTG-Tools】Revenue Compare - \d{8}\.xlsx$/i, model: 'revenue' },
+        { pattern: /【MMTG-Tools】Active Users - \d{8}\.xlsx$/i, model: 'active' },
+        { pattern: /【MMTG-Tools】Weekly KPI - \d{8}\.xlsx$/i, model: 'weekly' },
+        { pattern: /【MMTG-Tools】Hourly Performance - \d{8}\.xlsx$/i, model: 'hourly_performance' },
+        { pattern: /【MMTG-Tools】Comparative Analytics - \d{8}\.xlsx$/i, model: 'comparative' }
       ]
 
       // Get all .xlsx files in directory
@@ -25,7 +25,28 @@ class ExcelParserService {
       const excelFiles = allFiles.filter(file => file.endsWith('.xlsx'))
 
       for (const file of files) {
-        const matchingFile = excelFiles.find(excelFile => file.pattern.test(excelFile))
+        // Try strict regex match first
+        let matchingFile = excelFiles.find(excelFile => file.pattern.test(excelFile))
+
+        // Fallback: be more tolerant. Look for files that contain the date and a keyword
+        if (!matchingFile) {
+          const keywordMap = {
+            daily: 'daily',
+            hourly: 'hourly',
+            imt: 'imt',
+            revenue: 'revenue',
+            active: 'active',
+            weekly: 'weekly',
+            hourly_performance: 'performance|hourly',
+            comparative: 'comparative'
+          }
+
+          const kw = keywordMap[file.model] || file.model
+          const re = new RegExp(kw, 'i')
+
+          matchingFile = excelFiles.find(f => f.includes(date) && re.test(f))
+        }
+
         if (matchingFile) {
           const filePath = path.join(directoryPath, matchingFile)
           try {
@@ -35,7 +56,7 @@ class ExcelParserService {
             logger.error(`Error parsing ${file.model} file:`, error)
           }
         } else {
-          logger.warn(`No matching file found for pattern: ${file.pattern}`)
+          logger.warn(`No matching file found for pattern: ${file.pattern}. Available excel files: ${excelFiles.join(', ')}`)
         }
       }
 

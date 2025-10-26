@@ -47,15 +47,11 @@ app.listen(PORT, () => {
   console.log(`API server running on port ${PORT}`)
   console.log(`Redis status: ${process.env.REDIS_AVAILABLE === 'true' ? 'enabled' : 'disabled'}`)
 
-  // Start the daily data ingestion job only if Redis is available
-  if (process.env.REDIS_AVAILABLE === 'true') {
-    try {
-      dailyDataIngestionJob.start()
-      console.log('Daily data ingestion job started')
-    } catch (error) {
-      console.warn('Failed to start daily data ingestion job:', error.message)
-    }
-  } else {
-    console.log('Daily data ingestion job skipped (Redis not available)')
+  // Start the daily data ingestion job
+  try {
+    dailyDataIngestionJob.start()
+    console.log('Daily data ingestion job started (runs daily at 9:00 AM)')
+  } catch (error) {
+    console.error('Failed to start daily data ingestion job:', error.message)
   }
 })

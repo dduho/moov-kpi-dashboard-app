@@ -1,4 +1,4 @@
-const ActiveUsers = require('../models/ActiveUsers')
+const { ActiveUsers } = require('../models')
 const cacheService = require('../services/cacheService')
 
 class UserController {

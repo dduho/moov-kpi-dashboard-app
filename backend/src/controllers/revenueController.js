@@ -1,4 +1,4 @@
-const RevenueByChannel = require('../models/RevenueByChannel')
+const { RevenueByChannel } = require('../models')
 const cacheService = require('../services/cacheService')
 
 class RevenueController {

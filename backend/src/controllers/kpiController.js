@@ -1,9 +1,4 @@
-const DailyKpi = require('../models/DailyKpi')
-const HourlyKpi = require('../models/HourlyKpi')
-const WeeklyKpis = require('../models/WeeklyKpis')
-const ActiveUsers = require('../models/ActiveUsers')
-const HourlyPerformance = require('../models/HourlyPerformance')
-const ComparativeAnalytics = require('../models/ComparativeAnalytics')
+const { DailyKpi, HourlyKpi, WeeklyKpis, ActiveUsers, HourlyPerformance, ComparativeAnalytics } = require('../models')
 const cacheService = require('../services/cacheService')
 
 class KpiController {
@@ -303,22 +298,17 @@ class KpiController {
 
   async getHourlyPerformance(req, res, next) {
     try {
-      const { date, business_type } = req.query
-      const cacheKey = `hourly-performance:${date}:${business_type || 'all'}`
+      const { date } = req.query
+      const cacheKey = `hourly-performance:${date}`
 
       const cachedData = await cacheService.get(cacheKey)
       if (cachedData) {
         return res.json(cachedData)
       }
 
-      const whereClause = { date }
-      if (business_type) {
-        whereClause.business_type = business_type
-      }
-
       const performance = await HourlyPerformance.findAll({
-        where: whereClause,
-        order: [['hour', 'ASC'], ['business_type', 'ASC']]
+        where: { date },
+        order: [['hour', 'ASC']]
       })
 
       await cacheService.set(cacheKey, performance, 300)

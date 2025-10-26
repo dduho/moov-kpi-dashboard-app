@@ -8,11 +8,13 @@ const fs = require('fs').promises
 const path = require('path')
 const AdmZip = require('adm-zip')
 const unrar = require('node-unrar-js')
+const ingestionService = require('../services/dailyDataIngestionService')
 const { DailyKpi } = require('../models')
 
 class DailyDataIngestionJob {
   constructor() {
-    this.tempDir = path.join(__dirname, '../../temp')
+    // Use absolute path to kpi_data directory (mounted volume in Docker, relative path locally)
+    this.tempDir = process.env.KPI_DATA_PATH || path.join(__dirname, '../../../kpi_data')
     this.processedDates = new Set() // Track processed dates in memory
     this.ensureTempDir()
   }
@@ -115,15 +117,72 @@ class DailyDataIngestionJob {
 
     try {
       const entries = await fs.readdir(monthPath, { withFileTypes: true })
+
+      // First handle RAR files found directly in the month folder by extracting
+      // them and moving any contained Excel files into a date folder.
       const rarFiles = entries
-        .filter(entry => entry.isFile() && entry.name.endsWith('.rar'))
-        .map(entry => entry.name.replace('.rar', '')) // Remove .rar extension to get date
-        .filter(date => /^\d{8}$/.test(date)) // Ensure it's a valid date format
+        .filter(entry => entry.isFile() && entry.name.toLowerCase().endsWith('.rar'))
+        .map(entry => entry.name)
+
+      for (const rarFile of rarFiles) {
+        try {
+          const rarFullPath = path.join(monthPath, rarFile)
+          const dateMatch = rarFile.match(/(\d{8})\.rar$/)
+          const targetDate = dateMatch ? dateMatch[1] : null
+
+          logger.info(`Found RAR file ${rarFile} in ${monthFolder}`)
+
+          // Extract RAR to a temporary extraction directory
+          const extractPath = await ingestionService.extractRarFile(rarFullPath)
+
+          // If the RAR filename contains a date, move extracted Excel files into the date folder
+          if (targetDate) {
+            const dateFolderPath = path.join(monthPath, targetDate)
+            await fs.mkdir(dateFolderPath, { recursive: true })
+
+            // Move any Excel files from extractPath into the date folder
+            try {
+              // Move Excel files recursively from extractPath into dateFolderPath
+              await this.moveExcelsFromExtract(extractPath, dateFolderPath)
+            } catch (moveErr) {
+              logger.warn(`Could not move extracted files for ${rarFile}:`, moveErr.message)
+            }
+
+            // Cleanup extracted dir
+            try { await fs.rm(extractPath, { recursive: true, force: true }) } catch (e) { }
+          }
+        } catch (err) {
+          logger.error(`Failed to extract RAR ${rarFile}:`, err)
+        }
+      }
+
+      // Look for date folders (YYYYMMDD format) or Excel files
+      const dateFolders = entries
+        .filter(entry => {
+          if (entry.isDirectory() && /^\d{8}$/.test(entry.name)) {
+            return true // Date folder like 20251001
+          }
+          if (entry.isFile() && (entry.name.toLowerCase().endsWith('.xlsx') || entry.name.toLowerCase().endsWith('.xls'))) {
+            return true // Excel file
+          }
+          return false
+        })
+        .map(entry => {
+          if (entry.isDirectory()) {
+            return entry.name // Return date from folder name
+          } else {
+            // Extract date from Excel filename (handles .xls/.xlsx)
+            const match = entry.name.match(/(\d{8})\.(xlsx|xls)$/i)
+            return match ? match[1] : null
+          }
+        })
+        .filter(date => date && /^\d{8}$/.test(date)) // Ensure valid date format
+        .filter((date, index, arr) => arr.indexOf(date) === index) // Remove duplicates
         .sort() // Process in chronological order
 
-      logger.info(`Found ${rarFiles.length} RAR files in ${monthFolder}`)
+      logger.info(`Found ${dateFolders.length} date entries in ${monthFolder}: ${dateFolders.join(', ')}`)
 
-      for (const date of rarFiles) {
+      for (const date of dateFolders) {
         if (onlyNewFiles && this.processedDates.has(date)) {
           logger.debug(`Skipping already processed date: ${date}`)
           continue
@@ -146,44 +205,67 @@ class DailyDataIngestionJob {
     logger.info(`Processing data for date: ${date}`)
 
     try {
-      // 1. Check for RAR file
+      // 1. Check for Excel files directly in the date folder
       const monthFolder = date.substring(0, 6) // YYYYMM
-      const rarPath = path.join(this.tempDir, monthFolder, `${date}.rar`)
+      const dateFolderPath = path.join(this.tempDir, monthFolder, date)
 
-      logger.info(`Checking for RAR file: ${rarPath}`)
+      logger.info(`Checking for Excel files in: ${dateFolderPath}`)
       try {
-        await fs.access(rarPath)
-        logger.info(`Found RAR file: ${rarPath}`)
+        await fs.access(dateFolderPath)
+        logger.info(`Found date folder: ${dateFolderPath}`)
       } catch (error) {
-        throw new Error(`RAR file not found: ${rarPath}`)
+        logger.info(`Date folder not found, checking for direct Excel files in month folder`)
+        // If date folder doesn't exist, look for Excel files directly in month folder
+        const monthFolderPath = path.join(this.tempDir, monthFolder)
+
+        // First check if there's a RAR file for this date and extract it into a date folder
+        const possibleRar = path.join(monthFolderPath, `${date}.rar`)
+        try {
+          await fs.access(possibleRar)
+          logger.info(`Found RAR for date ${date}: ${possibleRar} — extracting now`)
+          try {
+            const extractPath = await ingestionService.extractRarFile(possibleRar)
+
+            // Ensure date folder exists and move any extracted Excel files into it
+            const tempDateFolder = path.join(monthFolderPath, date)
+            await fs.mkdir(tempDateFolder, { recursive: true })
+
+            // Move Excel files recursively from extractPath into tempDateFolder
+            try {
+              await this.moveExcelsFromExtract(extractPath, tempDateFolder)
+            } catch (e) {
+              logger.warn(`Failed moving extracted files for ${possibleRar}:`, e.message)
+            }
+
+            // Cleanup extracted directory
+            try { await fs.rm(extractPath, { recursive: true, force: true }) } catch (e) { }
+          } catch (err) {
+            logger.error(`Failed to extract RAR ${possibleRar}:`, err)
+          }
+        } catch (rarNotFoundErr) {
+          // No RAR for this date; proceed to look for direct Excel files
+        }
+
+        await this.processExcelFilesInFolder(monthFolderPath, date)
+        return
       }
 
-      // 2. Extract RAR
-      const extractPath = path.join(this.tempDir, date)
-      logger.info(`Extracting RAR files to ${extractPath}...`)
-      await this.extractRar(rarPath, extractPath)
-      logger.info(`Extracted RAR files to ${extractPath}`)
-
-      // 3. Parse Excel files
-      const filesDirectory = path.join(extractPath, date)
+      // 2. Parse Excel files directly from the date folder
       logger.info('Parsing Excel files...')
-      await excelParserService.parseAllFiles(filesDirectory, date)
+      await excelParserService.parseAllFiles(dateFolderPath, date)
       logger.info('Parsed all Excel files')
 
-      // 4. Calculate aggregated KPIs
-      logger.info('Calculating aggregated KPIs...')
-      await kpiCalculatorService.calculateDailyAggregates(date)
-      logger.info('Calculated aggregated KPIs')
+      // 3. Calculate aggregated KPIs (TEMPORARILY DISABLED - causes blocking issues with HourlyPerformance and ComparativeAnalytics)
+      // logger.info('Calculating aggregated KPIs...')
+      // await kpiCalculatorService.calculateDailyAggregates(date)
+      // logger.info('Calculated aggregated KPIs')
+      logger.info('Skipping aggregated KPIs calculation (disabled)')
 
-      // 5. Clear cache
-      logger.info('Clearing cache...')
-      await cacheService.clearAll()
-      logger.info('Cleared cache')
-
-      // 6. Cleanup temp files (but keep the original RAR file)
-      logger.info('Cleaning up temporary files...')
-      await this.cleanup(extractPath)
-      logger.info('Cleaned up temporary files')
+      // 4. Clear cache (TEMPORARILY DISABLED - Redis connection causes blocking)
+      // logger.info('Clearing cache...')
+      // await cacheService.clearAll()
+      // logger.info('Cleared cache')
+      logger.info('Skipping cache clearing (disabled)')
 
       logger.info(`Successfully completed data ingestion for date: ${date}`)
     } catch (error) {
@@ -192,22 +274,103 @@ class DailyDataIngestionJob {
     }
   }
 
+  async processExcelFilesInFolder(folderPath, date) {
+    try {
+      const entries = await fs.readdir(folderPath, { withFileTypes: true })
+      const excelFiles = entries
+        .filter(entry => entry.isFile() && entry.name.endsWith('.xlsx') && entry.name.includes(date))
+        .map(entry => entry.name)
+
+      if (excelFiles.length === 0) {
+        logger.warn(`No Excel files found for date ${date} in ${folderPath}`)
+        return
+      }
+
+      logger.info(`Found ${excelFiles.length} Excel files for date ${date}`)
+
+      // Create a temporary folder with the Excel files for parsing
+      const tempDateFolder = path.join(folderPath, date)
+      await fs.mkdir(tempDateFolder, { recursive: true })
+
+      // Copy Excel files to the temp folder
+      for (const excelFile of excelFiles) {
+        const srcPath = path.join(folderPath, excelFile)
+        const destPath = path.join(tempDateFolder, excelFile)
+        await fs.copyFile(srcPath, destPath)
+        logger.info(`Copied ${excelFile} to ${tempDateFolder}`)
+      }
+
+      // Parse the Excel files
+      await excelParserService.parseAllFiles(tempDateFolder, date)
+
+      // Calculate aggregated KPIs
+      await kpiCalculatorService.calculateDailyAggregates(date)
+
+      // Clear cache
+      await cacheService.clearAll()
+
+      // Cleanup temp folder
+      await fs.rm(tempDateFolder, { recursive: true, force: true })
+      logger.info(`Cleaned up temporary folder: ${tempDateFolder}`)
+
+    } catch (error) {
+      logger.error(`Error processing Excel files in folder ${folderPath}:`, error)
+      throw error
+    }
+  }
+
+  // Recursively find Excel files under an extraction path and move them into destFolder
+  async moveExcelsFromExtract(extractPath, destFolder) {
+    const walk = async (current) => {
+      const entries = await fs.readdir(current, { withFileTypes: true })
+      for (const e of entries) {
+        const full = path.join(current, e.name)
+        if (e.isDirectory()) {
+          await walk(full)
+        } else if (e.isFile()) {
+          const lower = e.name.toLowerCase()
+          if (lower.endsWith('.xlsx') || lower.endsWith('.xls')) {
+            const dest = path.join(destFolder, e.name)
+            try {
+              await fs.mkdir(path.dirname(dest), { recursive: true })
+              await fs.rename(full, dest)
+              logger.info(`Moved extracted Excel ${e.name} -> ${dest}`)
+            } catch (err) {
+              logger.warn(`Failed to move extracted file ${full} -> ${dest}:`, err.message)
+            }
+          }
+        }
+      }
+    }
+
+    await walk(extractPath)
+  }
+
   async tryFindLocalFile(date) {
     const possiblePaths = [
-      // Primary: RAR files in monthly folders
-      path.join(this.tempDir, date.substring(0, 6), `${date}.rar`),
-      // Fallback: RAR file in root temp directory
-      path.join(this.tempDir, `${date}.rar`)
+      // Primary: Date folder
+      path.join(this.tempDir, date.substring(0, 6), date),
+      // Fallback: Excel files directly in month folder
+      path.join(this.tempDir, date.substring(0, 6))
     ]
 
     for (const filePath of possiblePaths) {
       try {
-        logger.info(`Checking for local file: ${filePath}`)
-        await fs.access(filePath)
-        logger.info(`Found local file: ${filePath}`)
-        return true
+        logger.info(`Checking for data at: ${filePath}`)
+        const stats = await fs.stat(filePath)
+
+        if (stats.isDirectory()) {
+          // Check if directory contains Excel files
+          const files = await fs.readdir(filePath)
+          const hasExcelFiles = files.some(file => file.endsWith('.xlsx') && file.includes(date))
+          if (hasExcelFiles) {
+            logger.info(`Found Excel files for date ${date} in: ${filePath}`)
+            return true
+          }
+        }
+        // Continue checking other paths
       } catch (error) {
-        logger.debug(`File not found at ${filePath}:`, error.message)
+        logger.debug(`Path not found or not accessible: ${filePath}`)
         continue
       }
     }
@@ -219,132 +382,6 @@ class DailyDataIngestionJob {
   async runForDate(date) {
     logger.info(`Manually triggering data ingestion for date: ${date}`)
     await this.processDate(date)
-  }
-
-  async extractRar(rarPath, extractPath) {
-    const { spawn } = require('child_process')
-    const os = require('os')
-    
-    return new Promise((resolve, reject) => {
-      const isWindows = os.platform() === 'win32'
-      
-      if (isWindows) {
-        // Windows: Use PowerShell to extract RAR files
-        const psCommand = `
-          $rarPath = "${rarPath.replace(/\\/g, '\\\\')}"
-          $extractPath = "${extractPath.replace(/\\/g, '\\\\')}"
-          
-          # Create extraction directory if it doesn't exist
-          if (!(Test-Path $extractPath)) {
-            New-Item -ItemType Directory -Path $extractPath -Force | Out-Null
-          }
-          
-          # Extract RAR file using Windows built-in expand command or 7zip if available
-          try {
-            # Try with 7zip first (more reliable)
-            $sevenZip = "C:\\Program Files\\7-Zip\\7z.exe"
-            if (Test-Path $sevenZip) {
-              & $sevenZip x "$rarPath" "-o$extractPath" "-y"
-            } else {
-              # Fallback to PowerShell Expand-Archive (for ZIP files) or COM object
-              $shell = New-Object -ComObject Shell.Application
-              $rar = $shell.NameSpace("$rarPath")
-              $destination = $shell.NameSpace("$extractPath")
-              $destination.CopyHere($rar.Items(), 16)
-            }
-          } catch {
-            throw "Failed to extract RAR file: $($_.Exception.Message)"
-          }
-        `
-        
-        const powershell = spawn('powershell.exe', ['-Command', psCommand], {
-          stdio: ['pipe', 'pipe', 'pipe']
-        })
-        
-        let stdout = ''
-        let stderr = ''
-        
-        powershell.stdout.on('data', (data) => {
-          stdout += data.toString()
-        })
-        
-        powershell.stderr.on('data', (data) => {
-          stderr += data.toString()
-        })
-        
-        powershell.on('close', (code) => {
-          if (code === 0) {
-            logger.info(`Successfully extracted RAR file to ${extractPath}`)
-            resolve()
-          } else {
-            logger.error(`PowerShell extraction failed with code ${code}`)
-            logger.error(`stdout: ${stdout}`)
-            logger.error(`stderr: ${stderr}`)
-            reject(new Error(`Failed to extract RAR file: ${stderr || stdout}`))
-          }
-        })
-        
-        powershell.on('error', (error) => {
-          logger.error('Error spawning PowerShell for RAR extraction:', error)
-          reject(error)
-        })
-      } else {
-        // Linux: Use unrar or 7z command
-        const linuxCommand = `
-          mkdir -p "${extractPath}" &&
-          if command -v unrar >/dev/null 2>&1; then
-            unrar x -o+ "${rarPath}" "${extractPath}/"
-          elif command -v 7z >/dev/null 2>&1; then
-            7z x "${rarPath}" -o"${extractPath}"
-          else
-            echo "Neither unrar nor 7z found. Please install unrar or p7zip-full"
-            exit 1
-          fi
-        `
-        
-        const bash = spawn('bash', ['-c', linuxCommand], {
-          stdio: ['pipe', 'pipe', 'pipe']
-        })
-        
-        let stdout = ''
-        let stderr = ''
-        
-        bash.stdout.on('data', (data) => {
-          stdout += data.toString()
-        })
-        
-        bash.stderr.on('data', (data) => {
-          stderr += data.toString()
-        })
-        
-        bash.on('close', (code) => {
-          if (code === 0) {
-            logger.info(`Successfully extracted RAR file to ${extractPath}`)
-            resolve()
-          } else {
-            logger.error(`Linux extraction failed with code ${code}`)
-            logger.error(`stdout: ${stdout}`)
-            logger.error(`stderr: ${stderr}`)
-            reject(new Error(`Failed to extract RAR file: ${stderr || stdout}`))
-          }
-        })
-        
-        bash.on('error', (error) => {
-          logger.error('Error spawning bash for RAR extraction:', error)
-          reject(error)
-        })
-      }
-    })
-  }
-
-  async cleanup(extractPath) {
-    try {
-      // Remove the extracted directory but keep the original RAR file
-      await fs.rm(extractPath, { recursive: true, force: true })
-      logger.info(`Cleaned up temporary extraction directory: ${extractPath}`)
-    } catch (error) {
-      logger.warn(`Failed to cleanup ${extractPath}:`, error.message)
-    }
   }
 }
 

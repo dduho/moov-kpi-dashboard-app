@@ -1,8 +1,5 @@
 const ExcelJS = require('exceljs')
-const DailyKpi = require('../models/DailyKpi')
-const HourlyKpi = require('../models/HourlyKpi')
-const ImtTransaction = require('../models/ImtTransaction')
-const RevenueByChannel = require('../models/RevenueByChannel')
+const { DailyKpi, HourlyKpi, ImtTransaction, RevenueByChannel } = require('../models')
 
 class ExportController {
   async exportToExcel(req, res, next) {

@@ -46,16 +46,21 @@ services:
       dockerfile: docker/Dockerfile.backend
     container_name: kpi-backend-dev
     environment:
-      - DATABASE_URL=postgresql://dashboard_user:${DB_PASSWORD:-your_password}@postgres:5432/mmtg_dashboard
-      - REDIS_URL=redis://redis:6379
+      - NODE_ENV=production
+      - API_PORT=3000
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=mmtg_dashboard
+      - DB_USER=dashboard_user
+      - DB_PASSWORD=${DB_PASSWORD:-your_password}
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_AVAILABLE=true
-      - SECRET_KEY=${SECRET_KEY:-your_secret_key}
-      - ALGORITHM=HS256
-      - ACCESS_TOKEN_EXPIRE_MINUTES=30
+      - KPI_DATA_PATH=/backend/kpi_data
+      - JWT_SECRET=${JWT_SECRET:-your_jwt_secret_key_here}
+      - CORS_ORIGIN=http://localhost:5173
     ports:
-      - "8000:8000"
+      - "3000:3000"
     depends_on:
       postgres:
         condition: service_healthy
@@ -66,10 +71,10 @@ services:
     restart: unless-stopped
     volumes:
       - ./backend:/app
+      - ./kpi_data:/backend/kpi_data
       - /app/node_modules
     healthcheck:
-      # ⚠️ Vérifie le port INTERNE (8000) selon la configuration API_PORT
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -92,7 +97,8 @@ services:
       - ./frontend:/app
       - /app/node_modules
     environment:
-      - VITE_API_BASE_URL=http://backend:8000/api
+      - VITE_API_BASE_URL=http://localhost:3000/api
+      - VITE_PROXY_TARGET=http://backend:3000
     command: npm run dev -- --host 0.0.0.0
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:5173 || exit 1"]

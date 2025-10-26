@@ -1,4 +1,4 @@
-const DailyKpi = require('../models/DailyKpi')
+const { DailyKpi } = require('../models')
 const cacheService = require('../services/cacheService')
 
 class AgentController {

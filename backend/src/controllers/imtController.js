@@ -1,4 +1,4 @@
-const ImtTransaction = require('../models/ImtTransaction')
+const { ImtTransaction } = require('../models')
 const cacheService = require('../services/cacheService')
 
 class ImtController {

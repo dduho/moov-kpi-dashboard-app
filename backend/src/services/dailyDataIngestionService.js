@@ -2,6 +2,9 @@ const ftp = require('basic-ftp')
 const fs = require('fs').promises
 const path = require('path')
 const unrar = require('node-unrar-js')
+const { exec } = require('child_process')
+const util = require('util')
+const execAsync = util.promisify(exec)
 
 class DailyDataIngestionService {
   constructor() {
@@ -104,17 +107,30 @@ class DailyDataIngestionService {
     const extractPath = rarPath.replace('.rar', '_extracted')
     await fs.mkdir(extractPath, { recursive: true })
 
-    // Extract RAR file
-    const extractor = await unrar.createExtractorFromFile({
-      filepath: rarPath,
-      targetPath: extractPath
-    })
-
-    const { files } = extractor.extract()
-    console.log(`✅ RAR extracted to: ${extractPath}`)
-    console.log(`📁 Extracted ${files.length} files`)
-
-    return extractPath
+    // Try using command-line 7z/unrar if available (more reliable)
+    try {
+      // Prefer 7z if present
+      const cmd7z = `7z x -y -o"${extractPath}" "${rarPath}"`
+      await execAsync(cmd7z)
+      console.log(`✅ RAR extracted to: ${extractPath} using 7z`)
+      return extractPath
+    } catch (cmdErr) {
+      console.warn('7z extraction failed or not available, falling back to node-unrar-js:', cmdErr.message)
+      try {
+        const extractor = await unrar.createExtractorFromFile({
+          filepath: rarPath,
+          targetPath: extractPath
+        })
+        const result = extractor.extract()
+        const files = result && result.files ? result.files : []
+        console.log(`✅ RAR extraction (node-unrar-js) completed to: ${extractPath}`)
+        console.log(`📁 Extracted ${files.length} files`)
+        return extractPath
+      } catch (fallbackErr) {
+        console.error('Failed to extract RAR with node-unrar-js:', fallbackErr.message)
+        throw fallbackErr
+      }
+    }
   }
 
   /**

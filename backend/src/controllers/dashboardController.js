@@ -1,8 +1,4 @@
-const DailyKpi = require('../models/DailyKpi')
-const HourlyKpi = require('../models/HourlyKpi')
-const ImtTransaction = require('../models/ImtTransaction')
-const RevenueByChannel = require('../models/RevenueByChannel')
-const ActiveUsers = require('../models/ActiveUsers')
+const { DailyKpi, HourlyKpi, ImtTransaction, RevenueByChannel, ActiveUsers } = require('../models')
 const cacheService = require('../services/cacheService')
 
 class DashboardController {

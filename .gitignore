@@ -57,6 +57,7 @@ redis_data_prod/
 # Temporary files
 tmp/
 temp/
+kpi_data/
 
 # Cache
 .cache/

@@ -6,20 +6,24 @@ class KpiCalculatorService {
     try {
       logger.info(`Calculating daily aggregates for date: ${date}`)
 
-      await Promise.all([
-        this.calculateDailyKpiAggregates(date),
-        this.calculateImtAggregates(date),
-        this.calculateRevenueAggregates(date),
-        this.calculateComparisons(date),
-        this.calculateWeeklyAggregates(date),
-        this.calculateHourlyPerformanceAggregates(date),
-        this.calculateComparativeAnalyticsAggregates(date)
-      ])
+      // Execute all aggregation functions, catching errors individually so one failure doesn't stop others
+      const aggregationPromises = [
+        this.calculateDailyKpiAggregates(date).catch(err => logger.error(`Error calculating daily KPI aggregates for ${date}:`, err.message)),
+        this.calculateImtAggregates(date).catch(err => logger.error(`Error calculating IMT aggregates for ${date}:`, err.message)),
+        this.calculateRevenueAggregates(date).catch(err => logger.error(`Error calculating revenue aggregates for ${date}:`, err.message)),
+        this.calculateComparisons(date).catch(err => logger.error(`Error calculating comparisons for ${date}:`, err.message)),
+        this.calculateWeeklyAggregates(date).catch(err => logger.error(`Error calculating weekly aggregates for ${date}:`, err.message)),
+        this.calculateHourlyPerformanceAggregates(date).catch(err => logger.error(`Error calculating hourly performance aggregates for ${date}:`, err.message)),
+        this.calculateComparativeAnalyticsAggregates(date).catch(err => logger.error(`Error calculating comparative analytics aggregates for ${date}:`, err.message))
+      ]
+
+      await Promise.all(aggregationPromises)
 
       logger.info(`Successfully calculated daily aggregates for date: ${date}`)
     } catch (error) {
       logger.error(`Error calculating daily aggregates for date ${date}:`, error)
-      throw error
+      // Don't throw - allow import to continue even if aggregates fail
+      logger.warn(`Continuing import despite aggregate calculation errors for date ${date}`)
     }
   }
 

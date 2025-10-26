@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node scripts/test-ingestion-pipeline.js:*)",
+      "Bash(node scripts/generate-test-data.js:*)",
+      "Bash(node -e:*)",
+      "Bash(node scripts/ingest-and-display.js:*)",
+      "Bash(docker-compose up:*)",
+      "Bash(docker-compose ps:*)",
+      "Bash(docker-compose stop:*)",
+      "Bash(docker-compose rm:*)",
+      "Bash(docker-compose logs:*)",
+      "Bash(docker volume rm:*)",
+      "Bash(docker-compose restart:*)",
+      "Bash(docker-compose exec:*)",
+      "Bash(curl:*)",
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwidXNlcm5hbWUiOiJhZG1pbiIsImVtYWlsIjoiYWRtaW5AbW9vdi5jb20iLCJpYXQiOjE3NjE0ODMzMjYsImV4cCI6MTc2MTU2OTcyNn0.TZkfJ8tUTfT25uaFPREpHHyGhpei2pfDcy76qmMAoGw\")",
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwidXNlcm5hbWUiOiJhZG1pbiIsImVtYWlsIjoiYWRtaW5AbW9vdi5jb20iLCJpYXQiOjE3NjE0ODMzNjYsImV4cCI6MTc2MTU2OTc2Nn0.EzD4JtsH6QqrL7oONKsQeXbiTh27wNSuJocJ8UHtqPg\")",
+      "Bash(echo:*)",
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwidXNlcm5hbWUiOiJhZG1pbiIsImVtYWlsIjoiYWRtaW5AbW9vdi5jb20iLCJpYXQiOjE3NjE0ODM0MTAsImV4cCI6MTc2MTU2OTgxMH0.kz1p7FUkASYLglIYtMiOO4K5vC1epLzhBuVxhOyB5_s\")"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
