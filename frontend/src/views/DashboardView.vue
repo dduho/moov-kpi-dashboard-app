@@ -465,6 +465,203 @@
           </div>
         </div>
       </div>
+
+      <!-- 8. ANALYSES HEBDOMADAIRES -->
+      <div v-show="activeTab === 'weekly'">
+        <h3 class="category-title">Analyses Hebdomadaires</h3>
+
+        <div v-if="weeklyData" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+          <KpiCard
+            title="Revenus Totaux"
+            :value="formatCurrency(weeklyData.total_revenue || 0)"
+            :trend="weeklyData.revenue_change_percent || 0"
+            variant="green"
+            iconType="sales"
+          />
+          <KpiCard
+            title="Transactions Totales"
+            :value="formatNumber(weeklyData.total_transactions || 0)"
+            :trend="weeklyData.transaction_change_percent || 0"
+            variant="blue"
+            iconType="products"
+          />
+          <KpiCard
+            title="Revenus Journaliers Moyens"
+            :value="formatCurrency(weeklyData.avg_daily_revenue || 0)"
+            :trend="0"
+            variant="purple"
+            iconType="orders"
+          />
+          <KpiCard
+            title="Transactions Journalières Moyennes"
+            :value="formatNumber(weeklyData.avg_daily_transactions || 0)"
+            :trend="0"
+            variant="orange"
+            iconType="customers"
+          />
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <div class="chart-card">
+            <h4 class="chart-title">Revenus par Jour de la Semaine</h4>
+            <BarChart :data="getWeeklyRevenueData()" :height="300" />
+          </div>
+          <div class="chart-card">
+            <h4 class="chart-title">Transactions par Jour de la Semaine</h4>
+            <BarChart :data="getWeeklyTransactionsData()" :height="300" />
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <h4 class="chart-title">Évolution Hebdomadaire des Revenus</h4>
+          <LineChart :data="getWeeklyTrendsData()" :height="300" />
+        </div>
+      </div>
+
+      <!-- 9. PERFORMANCE HORAIRE -->
+      <div v-show="activeTab === 'hourly'">
+        <h3 class="category-title">Performance Horaire Détaillée</h3>
+
+        <div v-if="hourlyData && hourlyData.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+          <KpiCard
+            title="Heure de Pointe"
+            :value="getPeakHour()"
+            :trend="0"
+            variant="orange"
+            iconType="sales"
+          />
+          <KpiCard
+            title="Transactions Max/H"
+            :value="formatNumber(getMaxHourlyTransactions())"
+            :trend="0"
+            variant="blue"
+            iconType="products"
+          />
+          <KpiCard
+            title="Revenus Max/H"
+            :value="formatCurrency(getMaxHourlyRevenue())"
+            :trend="0"
+            variant="green"
+            iconType="orders"
+          />
+          <KpiCard
+            title="Taux de Croissance Moyen"
+            :value="`${getAverageGrowthRate()}%`"
+            :trend="0"
+            variant="purple"
+            iconType="customers"
+          />
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <div class="chart-card">
+            <h4 class="chart-title">Distribution Horaire des Transactions</h4>
+            <BarChart :data="getHourlyTransactionsData()" :height="300" />
+          </div>
+          <div class="chart-card">
+            <h4 class="chart-title">Distribution Horaire des Revenus</h4>
+            <BarChart :data="getHourlyRevenueData()" :height="300" />
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <h4 class="chart-title">Évolution Horaire avec Comparaison J-1</h4>
+          <LineChart :data="getHourlyComparisonData()" :height="300" />
+        </div>
+      </div>
+
+      <!-- 10. ANALYSES COMPARATIVES -->
+      <div v-show="activeTab === 'comparative'">
+        <h3 class="category-title">Analyses Comparatives Jour/Jour</h3>
+
+        <div v-if="comparativeData && comparativeData.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+          <KpiCard
+            title="Évolution Moyenne"
+            :value="getAverageTrend()"
+            :trend="0"
+            variant="blue"
+            iconType="sales"
+          />
+          <KpiCard
+            title="Transactions en Croissance"
+            :value="`${getGrowthPercentage()}%`"
+            :trend="0"
+            variant="green"
+            iconType="products"
+          />
+          <KpiCard
+            title="Business Types"
+            :value="formatNumber(comparativeData.length)"
+            :trend="0"
+            variant="purple"
+            iconType="orders"
+          />
+          <KpiCard
+            title="Performance Globale"
+            :value="getOverallPerformance()"
+            :trend="0"
+            variant="orange"
+            iconType="customers"
+          />
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <div class="chart-card">
+            <h4 class="chart-title">Écart des Transactions par Business Type</h4>
+            <BarChart :data="getTransactionGapData()" :height="300" />
+          </div>
+          <div class="chart-card">
+            <h4 class="chart-title">Écart des Revenus par Business Type</h4>
+            <BarChart :data="getRevenueGapData()" :height="300" />
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <h4 class="chart-title mb-4">Détail par Business Type</h4>
+          <div class="overflow-x-auto">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Business Type</th>
+                  <th>Jour Actuel (Transactions)</th>
+                  <th>Jour Précédent (Transactions)</th>
+                  <th>Écart (Transactions)</th>
+                  <th>Jour Actuel (Revenus)</th>
+                  <th>Jour Précédent (Revenus)</th>
+                  <th>Écart (Revenus)</th>
+                  <th>Tendance</th>
+                  <th>Performance</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="item in comparativeData" :key="item.business_type">
+                  <td class="font-semibold">{{ item.business_type }}</td>
+                  <td>{{ formatNumber(item.current_day_transaction_count) }}</td>
+                  <td>{{ formatNumber(item.last_day_transaction_count) }}</td>
+                  <td :class="item.transaction_count_gap >= 0 ? 'text-success-600' : 'text-error-600'">
+                    {{ item.transaction_count_gap >= 0 ? '+' : '' }}{{ formatNumber(item.transaction_count_gap) }}
+                  </td>
+                  <td>{{ formatCurrency(item.current_day_revenue) }}</td>
+                  <td>{{ formatCurrency(item.last_day_revenue) }}</td>
+                  <td :class="item.revenue_gap >= 0 ? 'text-success-600' : 'text-error-600'">
+                    {{ item.revenue_gap >= 0 ? '+' : '' }}{{ formatCurrency(item.revenue_gap) }}
+                  </td>
+                  <td>
+                    <span :class="getTrendClass(item.trend)">
+                      {{ getTrendLabel(item.trend) }}
+                    </span>
+                  </td>
+                  <td>
+                    <span :class="getPerformanceClass(item.performance_indicator)">
+                      {{ item.performance_indicator }}
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -488,7 +685,10 @@ const tabs = [
   { id: 'revenue', label: 'Revenus' },
   { id: 'merchants', label: 'Marchands' },
   { id: 'agents', label: 'Agents' },
-  { id: 'channels', label: 'Canaux' }
+  { id: 'channels', label: 'Canaux' },
+  { id: 'weekly', label: 'Hebdomadaire' },
+  { id: 'hourly', label: 'Performance Horaire' },
+  { id: 'comparative', label: 'Analyses Comparatives' }
 ]
 
 // State
@@ -505,6 +705,9 @@ const agentData = ref(null)
 const channelData = ref(null)
 const usersData = ref(null)
 const revenueData = ref(null)
+const weeklyData = ref(null)
+const hourlyData = ref(null)
+const comparativeData = ref(null)
 
 // Mock retention cohorts (would come from API in production)
 const retentionCohorts = ref([
@@ -625,9 +828,35 @@ const fetchAllData = async (dateParams) => {
       revenueData.value = results[6]?.data || results[6]
     }
 
+    // Fetch new KPI data
+    try {
+      const [weeklyRes, hourlyRes, comparativeRes] = await Promise.all([
+        apiService.getWeeklyKpis().catch(e => {
+          console.error('Weekly KPI API error:', e)
+          return { data: null }
+        }),
+        apiService.getHourlyPerformance(new Date().toISOString().split('T')[0].replace(/-/g, '')).catch(e => {
+          console.error('Hourly KPI API error:', e)
+          return { data: null }
+        }),
+        apiService.getComparativeAnalytics(new Date().toISOString().split('T')[0].replace(/-/g, '')).catch(e => {
+          console.error('Comparative KPI API error:', e)
+          return { data: null }
+        })
+      ])
+
+      weeklyData.value = weeklyRes.data
+      hourlyData.value = hourlyRes.data
+      comparativeData.value = comparativeRes.data
+    } catch (kpiError) {
+      console.error('Error fetching new KPI data:', kpiError)
+      // Don't fail the whole load if KPI data fails
+    }
+
     // Check if we have any data at all
     const hasAnyData = dashboardData.value || acquisitionData.value || merchantData.value ||
-                      agentData.value || channelData.value || usersData.value || revenueData.value
+                      agentData.value || channelData.value || usersData.value || revenueData.value ||
+                      weeklyData.value || hourlyData.value || comparativeData.value
 
     if (!hasAnyData) {
       error.value = 'Aucune donnée disponible pour la période sélectionnée. La base de données pourrait être vide ou la plage de dates ne contient aucune donnée.'
@@ -831,6 +1060,211 @@ const getHourlyDistributionData = () => {
       backgroundColor: '#0EA5E9'
     }]
   }
+}
+
+// New KPI helper functions
+const getWeeklyRevenueData = () => {
+  if (!weeklyData.value?.daily_revenue) return { labels: [], datasets: [] }
+
+  const days = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
+  const data = weeklyData.value.daily_revenue
+
+  return {
+    labels: days,
+    datasets: [{
+      label: 'Revenus (XOF)',
+      data: data,
+      backgroundColor: '#10B981'
+    }]
+  }
+}
+
+const getWeeklyTransactionsData = () => {
+  if (!weeklyData.value?.daily_transactions) return { labels: [], datasets: [] }
+
+  const days = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
+  const data = weeklyData.value.daily_transactions
+
+  return {
+    labels: days,
+    datasets: [{
+      label: 'Transactions',
+      data: data,
+      backgroundColor: '#0EA5E9'
+    }]
+  }
+}
+
+const getWeeklyTrendsData = () => {
+  if (!weeklyData.value?.weekly_trends) return { labels: [], datasets: [] }
+
+  const trends = weeklyData.value.weekly_trends
+  return {
+    labels: trends.map(t => t.week),
+    datasets: [{
+      label: 'Revenus Hebdomadaires (XOF)',
+      data: trends.map(t => t.revenue),
+      borderColor: '#10B981',
+      backgroundColor: 'rgba(16, 185, 129, 0.1)',
+      tension: 0.4
+    }]
+  }
+}
+
+const getPeakHour = () => {
+  if (!hourlyData.value || hourlyData.value.length === 0) return 'N/A'
+  const peakHour = hourlyData.value.reduce((max, hour) =>
+    hour.transaction_count > max.transaction_count ? hour : max
+  )
+  return `${peakHour.hour}h`
+}
+
+const getMaxHourlyTransactions = () => {
+  if (!hourlyData.value || hourlyData.value.length === 0) return 0
+  return Math.max(...hourlyData.value.map(h => h.transaction_count))
+}
+
+const getMaxHourlyRevenue = () => {
+  if (!hourlyData.value || hourlyData.value.length === 0) return 0
+  return Math.max(...hourlyData.value.map(h => h.total_revenue))
+}
+
+const getAverageGrowthRate = () => {
+  if (!hourlyData.value || hourlyData.value.length === 0) return 0
+  const rates = hourlyData.value.map(h => h.growth_rate || 0)
+  return (rates.reduce((sum, rate) => sum + rate, 0) / rates.length).toFixed(1)
+}
+
+const getHourlyTransactionsData = () => {
+  if (!hourlyData.value) return { labels: [], datasets: [] }
+
+  return {
+    labels: hourlyData.value.map(h => `${h.hour}h`),
+    datasets: [{
+      label: 'Transactions',
+      data: hourlyData.value.map(h => h.transaction_count),
+      backgroundColor: '#0EA5E9'
+    }]
+  }
+}
+
+const getHourlyRevenueData = () => {
+  if (!hourlyData.value) return { labels: [], datasets: [] }
+
+  return {
+    labels: hourlyData.value.map(h => `${h.hour}h`),
+    datasets: [{
+      label: 'Revenus (XOF)',
+      data: hourlyData.value.map(h => h.total_revenue),
+      backgroundColor: '#10B981'
+    }]
+  }
+}
+
+const getHourlyComparisonData = () => {
+  if (!hourlyData.value) return { labels: [], datasets: [] }
+
+  return {
+    labels: hourlyData.value.map(h => `${h.hour}h`),
+    datasets: [
+      {
+        label: 'Aujourd\'hui',
+        data: hourlyData.value.map(h => h.transaction_count),
+        borderColor: '#0EA5E9',
+        backgroundColor: 'rgba(14, 165, 233, 0.1)',
+        tension: 0.4
+      },
+      {
+        label: 'Hier',
+        data: hourlyData.value.map(h => h.previous_day_count || 0),
+        borderColor: '#94A3B8',
+        backgroundColor: 'rgba(148, 163, 184, 0.1)',
+        tension: 0.4,
+        borderDash: [5, 5]
+      }
+    ]
+  }
+}
+
+const getAverageTrend = () => {
+  if (!comparativeData.value || comparativeData.value.length === 0) return '0%'
+  const trends = comparativeData.value.map(item => {
+    if (item.current_day_transaction_count > 0 && item.last_day_transaction_count > 0) {
+      return ((item.current_day_transaction_count - item.last_day_transaction_count) / item.last_day_transaction_count) * 100
+    }
+    return 0
+  })
+  const avgTrend = trends.reduce((sum, trend) => sum + trend, 0) / trends.length
+  return `${avgTrend >= 0 ? '+' : ''}${avgTrend.toFixed(1)}%`
+}
+
+const getGrowthPercentage = () => {
+  if (!comparativeData.value || comparativeData.value.length === 0) return 0
+  const growing = comparativeData.value.filter(item => item.transaction_count_gap > 0).length
+  return ((growing / comparativeData.value.length) * 100).toFixed(0)
+}
+
+const getOverallPerformance = () => {
+  if (!comparativeData.value || comparativeData.value.length === 0) return 'Neutre'
+  const positive = comparativeData.value.filter(item => item.transaction_count_gap > 0).length
+  const total = comparativeData.value.length
+  const percentage = (positive / total) * 100
+  if (percentage >= 70) return 'Excellent'
+  if (percentage >= 50) return 'Bon'
+  if (percentage >= 30) return 'Moyen'
+  return 'Faible'
+}
+
+const getTransactionGapData = () => {
+  if (!comparativeData.value) return { labels: [], datasets: [] }
+
+  return {
+    labels: comparativeData.value.map(item => item.business_type),
+    datasets: [{
+      label: 'Écart Transactions',
+      data: comparativeData.value.map(item => item.transaction_count_gap),
+      backgroundColor: comparativeData.value.map(item =>
+        item.transaction_count_gap >= 0 ? '#10B981' : '#EF4444'
+      )
+    }]
+  }
+}
+
+const getRevenueGapData = () => {
+  if (!comparativeData.value) return { labels: [], datasets: [] }
+
+  return {
+    labels: comparativeData.value.map(item => item.business_type),
+    datasets: [{
+      label: 'Écart Revenus (XOF)',
+      data: comparativeData.value.map(item => item.revenue_gap),
+      backgroundColor: comparativeData.value.map(item =>
+        item.revenue_gap >= 0 ? '#10B981' : '#EF4444'
+      )
+    }]
+  }
+}
+
+const getTrendClass = (trend) => {
+  if (!trend) return 'text-gray-500'
+  if (trend === 'up') return 'text-success-600'
+  if (trend === 'down') return 'text-error-600'
+  return 'text-gray-500'
+}
+
+const getTrendLabel = (trend) => {
+  if (!trend) return 'Stable'
+  if (trend === 'up') return '↗ Croissance'
+  if (trend === 'down') return '↘ Déclin'
+  return '→ Stable'
+}
+
+const getPerformanceClass = (performance) => {
+  if (!performance) return 'text-gray-500'
+  if (performance === 'Excellent') return 'text-success-600'
+  if (performance === 'Bon') return 'text-blue-600'
+  if (performance === 'Moyen') return 'text-yellow-600'
+  return 'text-error-600'
 }
 
 const calculateActivityRate = () => {

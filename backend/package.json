@@ -29,10 +29,12 @@
     "node-unrar-js": "^2.0.2",
     "nodemailer": "^7.0.10",
     "pg": "^8.12.0",
+    "rar-stream": "^3.3.0",
     "redis": "^4.7.0",
     "rimraf": "^6.0.1",
     "sequelize": "^6.37.7",
     "sqlite3": "^5.1.7",
+    "unrar": "^0.2.0",
     "winston": "^3.13.1"
   },
   "devDependencies": {

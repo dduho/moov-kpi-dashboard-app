@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -110,12 +110,29 @@ export const apiService = {
     })
   },
 
-  // Comparisons
-  getComparisons(date, compareWith) {
-    return apiClient.get('/comparisons', {
+  // Weekly KPIs
+  getWeeklyKpis(date) {
+    return apiClient.get('/kpis/weekly', {
+      params: date ? { date: formatDate(date) } : {}
+    })
+  },
+
+  // Hourly Performance
+  getHourlyPerformance(date, businessType) {
+    return apiClient.get('/kpis/hourly-performance', {
       params: {
         date: formatDate(date),
-        compare_with: compareWith
+        ...(businessType && { business_type: businessType })
+      }
+    })
+  },
+
+  // Comparative Analytics
+  getComparativeAnalytics(date, businessType) {
+    return apiClient.get('/kpis/comparative-analytics', {
+      params: {
+        date: formatDate(date),
+        ...(businessType && { business_type: businessType })
       }
     })
   },

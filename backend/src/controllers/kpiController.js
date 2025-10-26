@@ -1,5 +1,9 @@
 const DailyKpi = require('../models/DailyKpi')
 const HourlyKpi = require('../models/HourlyKpi')
+const WeeklyKpis = require('../models/WeeklyKpis')
+const ActiveUsers = require('../models/ActiveUsers')
+const HourlyPerformance = require('../models/HourlyPerformance')
+const ComparativeAnalytics = require('../models/ComparativeAnalytics')
 const cacheService = require('../services/cacheService')
 
 class KpiController {
@@ -177,6 +181,178 @@ class KpiController {
     const month = String(date.getMonth() + 1).padStart(2, '0')
     const day = String(date.getDate()).padStart(2, '0')
     return `${year}${month}${day}`
+  }
+
+  getWeekStartDate(dateStr) {
+    const date = new Date(
+      dateStr.substring(0, 4),
+      dateStr.substring(4, 6) - 1,
+      dateStr.substring(6, 8)
+    )
+    const day = date.getDay()
+    const diff = date.getDate() - day + (day === 0 ? -6 : 1) // Adjust for Sunday
+    const weekStart = new Date(date.setDate(diff))
+
+    const year = weekStart.getFullYear()
+    const month = String(weekStart.getMonth() + 1).padStart(2, '0')
+    const dayOfMonth = String(weekStart.getDate()).padStart(2, '0')
+    return `${year}${month}${dayOfMonth}`
+  }
+
+  async getWeeklyKpis(req, res, next) {
+    try {
+      const { date, week_start } = req.query
+      let cacheKey, kpis
+
+      if (week_start) {
+        cacheKey = `weekly-kpis:${week_start}`
+        const cachedData = await cacheService.get(cacheKey)
+        if (cachedData) {
+          return res.json(cachedData)
+        }
+
+        kpis = await WeeklyKpis.findAll({
+          where: { week_start_date: week_start },
+          order: [['week_start_date', 'ASC']]
+        })
+      } else if (date) {
+        // Find the week containing the specified date
+        const weekStart = this.getWeekStartDate(date)
+        cacheKey = `weekly-kpis:${weekStart}`
+        const cachedData = await cacheService.get(cacheKey)
+        if (cachedData) {
+          return res.json(cachedData)
+        }
+
+        kpis = await WeeklyKpis.findAll({
+          where: { week_start_date: weekStart },
+          order: [['week_start_date', 'ASC']]
+        })
+      } else {
+        // Get latest weekly KPIs
+        cacheKey = 'weekly-kpis:latest'
+        const cachedData = await cacheService.get(cacheKey)
+        if (cachedData) {
+          return res.json(cachedData)
+        }
+
+        kpis = await WeeklyKpis.findAll({
+          order: [['week_start_date', 'DESC']],
+          limit: 4 // Last 4 weeks
+        })
+      }
+
+      await cacheService.set(cacheKey, kpis, 300)
+      res.json(kpis)
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  async getActiveUsers(req, res, next) {
+    try {
+      const { date, start_date, end_date } = req.query
+      let cacheKey, users
+
+      if (date) {
+        cacheKey = `active-users:${date}`
+        const cachedData = await cacheService.get(cacheKey)
+        if (cachedData) {
+          return res.json(cachedData)
+        }
+
+        users = await ActiveUsers.findAll({
+          where: { date },
+          order: [['business_type', 'ASC']]
+        })
+      } else if (start_date && end_date) {
+        cacheKey = `active-users-range:${start_date}-${end_date}`
+        const cachedData = await cacheService.get(cacheKey)
+        if (cachedData) {
+          return res.json(cachedData)
+        }
+
+        users = await ActiveUsers.findAll({
+          where: {
+            date: {
+              [require('sequelize').Op.between]: [start_date, end_date]
+            }
+          },
+          order: [['date', 'ASC'], ['business_type', 'ASC']]
+        })
+      } else {
+        // Get latest active users data
+        cacheKey = 'active-users:latest'
+        const cachedData = await cacheService.get(cacheKey)
+        if (cachedData) {
+          return res.json(cachedData)
+        }
+
+        users = await ActiveUsers.findAll({
+          order: [['date', 'DESC']],
+          limit: 30 // Last 30 days
+        })
+      }
+
+      await cacheService.set(cacheKey, users, 300)
+      res.json(users)
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  async getHourlyPerformance(req, res, next) {
+    try {
+      const { date, business_type } = req.query
+      const cacheKey = `hourly-performance:${date}:${business_type || 'all'}`
+
+      const cachedData = await cacheService.get(cacheKey)
+      if (cachedData) {
+        return res.json(cachedData)
+      }
+
+      const whereClause = { date }
+      if (business_type) {
+        whereClause.business_type = business_type
+      }
+
+      const performance = await HourlyPerformance.findAll({
+        where: whereClause,
+        order: [['hour', 'ASC'], ['business_type', 'ASC']]
+      })
+
+      await cacheService.set(cacheKey, performance, 300)
+      res.json(performance)
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  async getComparativeAnalytics(req, res, next) {
+    try {
+      const { date, business_type } = req.query
+      const cacheKey = `comparative-analytics:${date}:${business_type || 'all'}`
+
+      const cachedData = await cacheService.get(cacheKey)
+      if (cachedData) {
+        return res.json(cachedData)
+      }
+
+      const whereClause = { date }
+      if (business_type) {
+        whereClause.business_type = business_type
+      }
+
+      const analytics = await ComparativeAnalytics.findAll({
+        where: whereClause,
+        order: [['business_type', 'ASC']]
+      })
+
+      await cacheService.set(cacheKey, analytics, 300)
+      res.json(analytics)
+    } catch (error) {
+      next(error)
+    }
   }
 }
 
