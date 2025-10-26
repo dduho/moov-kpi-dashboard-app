@@ -24,7 +24,11 @@ const HourlyKpi = require('./HourlyKpi')(sequelize, DataTypes)
 const ImtTransaction = require('./ImtTransaction')(sequelize, DataTypes)
 const RevenueByChannel = require('./RevenueByChannel')(sequelize, DataTypes)
 const ActiveUsers = require('./ActiveUsers')(sequelize, DataTypes)
+const KpiAggregates = require('./KpiAggregates')(sequelize, DataTypes)
 const KpiComparisons = require('./KpiComparisons')(sequelize, DataTypes)
+const WeeklyKpis = require('./WeeklyKpis')(sequelize, DataTypes)
+const HourlyPerformance = require('./HourlyPerformance')(sequelize, DataTypes)
+const ComparativeAnalytics = require('./ComparativeAnalytics')(sequelize, DataTypes)
 
 // Define relationships
 // User <-> Role (Many-to-Many)
@@ -67,5 +71,9 @@ module.exports = {
   ImtTransaction,
   RevenueByChannel,
   ActiveUsers,
-  KpiComparisons
+  KpiComparisons,
+  KpiAggregates,
+  WeeklyKpis,
+  HourlyPerformance,
+  ComparativeAnalytics
 }
