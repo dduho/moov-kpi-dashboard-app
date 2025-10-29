@@ -29,6 +29,7 @@ app.use('/api/acquisition', require('./routes/acquisition'))
 app.use('/api/merchants', require('./routes/merchants'))
 app.use('/api/agents', require('./routes/agents'))
 app.use('/api/channels', require('./routes/channels'))
+app.use('/api/analytics', require('./routes/analytics'))
 
 // Health check endpoint
 app.get('/health', (req, res) => {

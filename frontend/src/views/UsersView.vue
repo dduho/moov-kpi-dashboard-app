@@ -11,34 +11,46 @@
       </button>
     </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <!-- Date Range Filter -->
+    <div class="mb-6">
+      <DateRangeFilter @dateChange="handleDateChange" defaultRange="30days" />
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
       <KpiCard
-        title="Utilisateurs Totaux"
-        :value="formatNumber(userKpis.totalUsers)"
-        :trend="userKpis.totalTrend"
-        variant="purple"
+        title="Clients"
+        :value="formatNumberK(userKpis.clients)"
+        :trend="userKpis.mom_evolution"
+        variant="blue"
         iconType="customers"
       />
       <KpiCard
-        title="Actifs Aujourd'hui"
-        :value="formatNumber(userKpis.activeToday)"
-        :trend="userKpis.activeTrend"
-        variant="blue"
+        title="Agents"
+        :value="formatNumber(userKpis.agents)"
+        :trend="userKpis.mom_evolution"
+        variant="green"
         iconType="sales"
       />
       <KpiCard
-        title="Nouveaux Utilisateurs"
-        :value="formatNumber(userKpis.newUsers)"
-        :trend="userKpis.newTrend"
-        variant="green"
+        title="Marchands"
+        :value="formatNumber(userKpis.merchants)"
+        :trend="userKpis.mom_evolution"
+        variant="orange"
         iconType="orders"
       />
       <KpiCard
-        title="Taux d'Engagement"
-        value="${userKpis.engagementRate}%"
-        :trend="userKpis.engagementTrend"
-        variant="orange"
+        title="Nouveaux Inscrits"
+        :value="formatNumber(userKpis.new_registrations)"
+        :trend="userKpis.mom_evolution"
+        variant="purple"
         iconType="products"
+      />
+      <KpiCard
+        title="Users App"
+        :value="formatNumber(userKpis.app_users)"
+        :trend="userKpis.mom_evolution"
+        variant="indigo"
+        iconType="customers"
       />
     </div>
 
@@ -49,14 +61,14 @@
       </div>
 
       <div class="chart-card">
-        <h3 class="chart-title">Activité des Utilisateurs par Jour</h3>
+        <h3 class="chart-title">Évolution des Clients par Jour</h3>
         <BarChart :data="dailyActivityData" :height="300" />
       </div>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <div class="chart-card">
-        <h3 class="chart-title mb-4">Segments d'Utilisateurs</h3>
+        <h3 class="chart-title mb-4">Répartition des Utilisateurs</h3>
         <div class="space-y-4">
           <div v-for="segment in userSegments" :key="segment.name" class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
             <div class="flex items-center gap-4 flex-1">
@@ -65,7 +77,7 @@
               </div>
               <div>
                 <p class="font-medium text-gray-900">{{ segment.name }}</p>
-                <p class="text-sm text-gray-500">{{ formatNumber(segment.count) }} utilisateurs</p>
+                <p class="text-sm text-gray-500">{{ segment.displayValue }}</p>
               </div>
             </div>
             <div class="text-right">
@@ -77,21 +89,36 @@
       </div>
 
       <div class="chart-card">
-        <h3 class="chart-title mb-4">Utilisateurs les Plus Actifs</h3>
-        <div class="space-y-3">
-          <div v-for="(user, index) in topUsers" :key="user.id" class="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-full bg-primary-500 text-white flex items-center justify-center font-bold">
-                {{ index + 1 }}
-              </div>
-              <div>
-                <p class="font-medium text-gray-900">{{ user.name }}</p>
-                <p class="text-sm text-gray-500">{{ formatNumber(user.transactions) }} transactions</p>
-              </div>
+        <h3 class="chart-title mb-4">Statistiques Moyennes</h3>
+        <div class="space-y-4">
+          <div class="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
+            <div>
+              <p class="text-sm text-gray-600">Clients Moyens</p>
+              <p class="text-2xl font-bold text-blue-600">{{ formatNumberK(averageKpis.clients) }}</p>
             </div>
             <div class="text-right">
-              <p class="text-sm font-semibold text-gray-900">{{ formatCurrency(user.volume) }}</p>
-              <p class="text-xs text-gray-500">Volume</p>
+              <p class="text-sm text-gray-600">Total</p>
+              <p class="text-lg font-semibold text-gray-900">{{ formatNumberK(totalKpis.clients) }}</p>
+            </div>
+          </div>
+          <div class="flex items-center justify-between p-4 bg-green-50 rounded-lg">
+            <div>
+              <p class="text-sm text-gray-600">Agents Moyens</p>
+              <p class="text-2xl font-bold text-green-600">{{ formatNumber(averageKpis.agents) }}</p>
+            </div>
+            <div class="text-right">
+              <p class="text-sm text-gray-600">Total</p>
+              <p class="text-lg font-semibold text-gray-900">{{ formatNumber(totalKpis.agents) }}</p>
+            </div>
+          </div>
+          <div class="flex items-center justify-between p-4 bg-orange-50 rounded-lg">
+            <div>
+              <p class="text-sm text-gray-600">Marchands Moyens</p>
+              <p class="text-2xl font-bold text-orange-600">{{ formatNumber(averageKpis.merchants) }}</p>
+            </div>
+            <div class="text-right">
+              <p class="text-sm text-gray-600">Total</p>
+              <p class="text-lg font-semibold text-gray-900">{{ formatNumber(totalKpis.merchants) }}</p>
             </div>
           </div>
         </div>
@@ -101,65 +128,173 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import KpiCard from '@/components/widgets/KpiCard.vue'
 import LineChart from '@/components/charts/LineChart.simple.vue'
 import BarChart from '@/components/charts/BarChart.simple.vue'
+import DateRangeFilter from '@/components/filters/DateRangeFilter.vue'
 import { IconDownload } from '@/components/icons/Icons.vue'
+import { apiService } from '@/services/api.js'
 
 const userKpis = ref({
-  totalUsers: 45820,
-  totalTrend: 22.5,
-  activeToday: 12340,
-  activeTrend: 15.8,
-  newUsers: 1850,
-  newTrend: 28.3,
-  engagementRate: 68.5,
-  engagementTrend: 5.2
+  clients: 0,
+  agents: 0,
+  merchants: 0,
+  new_registrations: 0,
+  app_users: 0,
+  total_active: 0,
+  mom_evolution: 0
 })
 
-const userGrowthData = ref({
-  labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-  datasets: [{
-    label: 'Total Users',
-    data: [35000, 37500, 40200, 42800, 44500, 45820],
-    borderColor: '#A855F7',
-    backgroundColor: 'rgba(168, 85, 247, 0.1)',
-    tension: 0.4,
-    fill: true
-  }]
+const averageKpis = ref({
+  clients: 0,
+  agents: 0,
+  merchants: 0,
+  new_registrations: 0,
+  app_users: 0
 })
 
-const dailyActivityData = ref({
-  labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-  datasets: [{
-    label: 'Active Users',
-    data: [10500, 11200, 10800, 11800, 12800, 11500, 9800],
-    backgroundColor: '#0EA5E9'
-  }]
+const totalKpis = ref({
+  clients: 0,
+  agents: 0,
+  merchants: 0,
+  new_registrations: 0,
+  app_users: 0
 })
 
-const userSegments = ref([
-  { name: 'Utilisateurs Premium', count: 8540, percentage: 18.6, status: 'success', icon: '⭐', color: '#10B981' },
-  { name: 'Utilisateurs Réguliers', count: 28420, percentage: 62.0, status: 'info', icon: '👤', color: '#0EA5E9' },
-  { name: 'Nouveaux Utilisateurs', count: 6280, percentage: 13.7, status: 'warning', icon: '🆕', color: '#F59E0B' },
-  { name: 'Inactifs', count: 2580, percentage: 5.7, status: 'error', icon: '💤', color: '#EF4444' }
-])
+const userGrowthData = ref({ labels: [], datasets: [] })
+const dailyActivityData = ref({ labels: [], datasets: [] })
+const userSegments = ref([])
 
-const topUsers = ref([
-  { id: 1, name: 'John Doe', transactions: 2580, volume: 12500000 },
-  { id: 2, name: 'Jane Smith', transactions: 2340, volume: 11800000 },
-  { id: 3, name: 'Mike Johnson', transactions: 2120, volume: 10200000 },
-  { id: 4, name: 'Sarah Williams', transactions: 1980, volume: 9500000 },
-  { id: 5, name: 'Tom Brown', transactions: 1850, volume: 8900000 }
-])
+const formatNumber = (value) => {
+  if (!value) return '0'
+  return new Intl.NumberFormat('fr-FR').format(Math.round(value))
+}
 
-const formatNumber = (value) => new Intl.NumberFormat('en-US').format(value)
-const formatCurrency = (value) => new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'XOF',
-  minimumFractionDigits: 0
-}).format(value)
+const formatNumberK = (value) => {
+  if (!value) return '0 K'
+  const thousands = value / 1000
+  return new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 }).format(thousands) + ' K'
+}
+
+const loadUserData = async (dateParams) => {
+  try {
+    let startDate, endDate
+
+    if (dateParams.date) {
+      // Single date
+      startDate = dateParams.date
+      endDate = dateParams.date
+    } else {
+      // Date range
+      startDate = dateParams.start_date
+      endDate = dateParams.end_date
+    }
+
+    console.log('Loading users data:', { startDate, endDate })
+
+    const response = await apiService.getActiveUsers(startDate, endDate)
+    console.log('API Response:', response.data)
+
+    if (response?.data) {
+      const data = response.data
+
+      // L'API retourne maintenant: { total, average, latest }
+      if (data.latest) {
+        userKpis.value = {
+          clients: data.latest.clients || 0,
+          agents: data.latest.agents || 0,
+          merchants: data.latest.merchants || 0,
+          new_registrations: data.latest.new_registrations || 0,
+          app_users: data.latest.app_users || 0,
+          total_active: (data.latest.clients || 0) + (data.latest.agents || 0) + (data.latest.merchants || 0),
+          mom_evolution: data.latest.mom_evolution || 0
+        }
+      }
+
+      if (data.average) {
+        averageKpis.value = {
+          clients: data.average.clients || 0,
+          agents: data.average.agents || 0,
+          merchants: data.average.merchants || 0,
+          new_registrations: data.average.new_registrations || 0,
+          app_users: data.average.app_users || 0
+        }
+      }
+
+      if (data.total) {
+        totalKpis.value = {
+          clients: data.total.clients || 0,
+          agents: data.total.agents || 0,
+          merchants: data.total.merchants || 0,
+          new_registrations: data.total.new_registrations || 0,
+          app_users: data.total.app_users || 0
+        }
+      }
+
+      const latest = data.latest || {}
+
+      userSegments.value = [
+        {
+          name: 'Clients',
+          count: latest.clients || 0,
+          displayValue: formatNumberK(latest.clients || 0),
+          percentage: 0,
+          status: 'info',
+          icon: '👤',
+          color: '#0EA5E9'
+        },
+        {
+          name: 'Agents',
+          count: latest.agents || 0,
+          displayValue: formatNumber(latest.agents || 0),
+          percentage: 0,
+          status: 'success',
+          icon: '👨‍💼',
+          color: '#10B981'
+        },
+        {
+          name: 'Marchands',
+          count: latest.merchants || 0,
+          displayValue: formatNumber(latest.merchants || 0),
+          percentage: 0,
+          status: 'warning',
+          icon: '🏪',
+          color: '#F59E0B'
+        },
+        {
+          name: 'App Users',
+          count: latest.app_users || 0,
+          displayValue: formatNumber(latest.app_users || 0),
+          percentage: 0,
+          status: 'primary',
+          icon: '📱',
+          color: '#6366F1'
+        }
+      ]
+
+      // Calculer les pourcentages
+      const total = (latest.clients || 0) + (latest.agents || 0) + (latest.merchants || 0) + (latest.app_users || 0)
+      if (total > 0) {
+        userSegments.value.forEach(seg => {
+          seg.percentage = Math.round((seg.count / total) * 100)
+        })
+      }
+    }
+  } catch (e) {
+    console.error('Erreur chargement utilisateurs actifs:', e)
+  }
+}
+
+const handleDateChange = (dateParams) => {
+  console.log('Date changed:', dateParams)
+  loadUserData(dateParams)
+}
+
+onMounted(() => {
+  // Le DateRangeFilter va automatiquement émettre un événement au montage
+  // avec la plage par défaut (30days)
+})
 </script>
 
 <style scoped>

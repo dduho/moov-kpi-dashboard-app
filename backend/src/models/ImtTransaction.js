@@ -3,20 +3,22 @@ module.exports = (sequelize, DataTypes) => {
     date: { type: DataTypes.DATEONLY, allowNull: false },
     country: { type: DataTypes.STRING(50) },
     imt_business: { type: DataTypes.STRING(50) },
+    channel: { type: DataTypes.STRING(50), allowNull: false }, // ETHUB_SEND, ETHUB_RECV, MFS_SEND, MFS_RECV
+    hour: { type: DataTypes.INTEGER, allowNull: true }, // 0-23 for hourly data, null for daily
     total_success: { type: DataTypes.INTEGER },
     total_failed: { type: DataTypes.INTEGER },
-    amount: { type: DataTypes.DECIMAL(20,2) },
-    revenue: { type: DataTypes.DECIMAL(20,2) },
-    commission: { type: DataTypes.DECIMAL(20,2) },
-    tax: { type: DataTypes.DECIMAL(20,2) },
+    amount: { type: DataTypes.DECIMAL(20,2) }, // In millions XOF
+    revenue: { type: DataTypes.DECIMAL(20,2) }, // In thousands XOF
+    commission: { type: DataTypes.DECIMAL(20,2) }, // In thousands XOF
+    tax: { type: DataTypes.DECIMAL(20,2) }, // In thousands XOF
     success_rate: { type: DataTypes.DECIMAL(5,4) },
-    balance: { type: DataTypes.DECIMAL(20,2) }
+    balance: { type: DataTypes.DECIMAL(20,2) } // In millions XOF
   }, {
     tableName: 'imt_transactions',
     timestamps: true,
     createdAt: 'created_at',
     updatedAt: false,
-    indexes: [{ fields: ['date', 'country', 'imt_business'], unique: true }]
+    indexes: [{ fields: ['date', 'country', 'imt_business', 'channel', 'hour'], unique: true }]
   })
 
   // Static methods for data retrieval

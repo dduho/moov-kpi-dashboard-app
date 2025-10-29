@@ -1,4 +1,4 @@
-const { DailyKpi, HourlyKpi, ImtTransaction, RevenueByChannel, ActiveUsers, KpiComparisons, KpiAggregates, WeeklyKpis, HourlyPerformance, ComparativeAnalytics } = require('../models')
+const { DailyKpi, HourlyKpi, ImtTransaction, RevenueByChannel, ActiveUsers, KpiComparisons, KpiAggregates, WeeklyKpis, HourlyPerformance, ComparativeAnalytics, ChannelDailyStats } = require('../models')
 const logger = require('../utils/logger')
 
 class KpiCalculatorService {
@@ -14,7 +14,8 @@ class KpiCalculatorService {
         this.calculateComparisons(date).catch(err => logger.error(`Error calculating comparisons for ${date}:`, err.message)),
         this.calculateWeeklyAggregates(date).catch(err => logger.error(`Error calculating weekly aggregates for ${date}:`, err.message)),
         this.calculateHourlyPerformanceAggregates(date).catch(err => logger.error(`Error calculating hourly performance aggregates for ${date}:`, err.message)),
-        this.calculateComparativeAnalyticsAggregates(date).catch(err => logger.error(`Error calculating comparative analytics aggregates for ${date}:`, err.message))
+        this.calculateComparativeAnalyticsAggregates(date).catch(err => logger.error(`Error calculating comparative analytics aggregates for ${date}:`, err.message)),
+        this.calculateChannelDailyStats(date).catch(err => logger.error(`Error calculating channel daily stats for ${date}:`, err.message))
       ]
 
       await Promise.all(aggregationPromises)
@@ -265,8 +266,8 @@ class KpiCalculatorService {
   async calculateWeeklyAggregates(date) {
     try {
       // Calculate weekly aggregates from daily data
-      const weekStart = this.getWeekStartDate(date)
-      const weekEnd = this.getWeekEndDate(date)
+      const weekStart = this.getWeekStartDate(date);
+      const weekEnd = this.getWeekEndDate(date);
 
       const weeklyData = await DailyKpi.findAll({
         where: {
@@ -274,7 +275,7 @@ class KpiCalculatorService {
             [require('sequelize').Op.between]: [weekStart, weekEnd]
           }
         }
-      })
+      });
 
       if (weeklyData.length === 0) {
         logger.warn(`No daily data found for week starting ${weekStart}`)
@@ -284,11 +285,8 @@ class KpiCalculatorService {
       // Group by day of week
       const dayOfWeekData = {}
       weeklyData.forEach(item => {
-        const dayOfWeek = new Date(
-          item.date.substring(0, 4),
-          item.date.substring(4, 6) - 1,
-          item.date.substring(6, 8)
-        ).getDay()
+        const itemDate = new Date(item.date);
+        const dayOfWeek = itemDate.getDay();
 
         if (!dayOfWeekData[dayOfWeek]) {
           dayOfWeekData[dayOfWeek] = {
@@ -307,24 +305,24 @@ class KpiCalculatorService {
       const weeklyAvgDailyRevenue = weeklyTotalRevenue / 7
 
       // Get previous week data for growth calculation
-      const prevWeekStart = this.getPreviousWeekStartDate(weekStart)
+      const prevWeekStart = this.getPreviousWeekStartDate(weekStart);
       const prevWeekData = await DailyKpi.findAll({
         where: {
           date: {
             [require('sequelize').Op.between]: [prevWeekStart, this.getWeekEndDate(prevWeekStart)]
           }
         }
-      })
+      });
 
       const prevWeeklyTotalRevenue = prevWeekData.reduce((sum, item) => sum + parseFloat(item.revenue || 0), 0)
       const weeklyGrowthRate = prevWeeklyTotalRevenue > 0
         ? ((weeklyTotalRevenue - prevWeeklyTotalRevenue) / prevWeeklyTotalRevenue * 100).toFixed(2)
         : 0
 
-      const weekEndDate = this.getWeekEndDate(weekStart)
-      const weekStartDate = new Date(weekStart.substring(0, 4), weekStart.substring(4, 6) - 1, weekStart.substring(6, 8))
-      const year = weekStartDate.getFullYear()
-      const weekNumber = Math.ceil((weekStartDate - new Date(year, 0, 1)) / 86400000 / 7)
+      const weekEndDate = this.getWeekEndDate(weekStart);
+      const weekStartDate = new Date(weekStart);
+      const year = weekStartDate.getFullYear();
+      const weekNumber = Math.ceil((weekStartDate - new Date(year, 0, 1)) / 86400000 / 7);
 
       const weeklyRecord = {
         week_start_date: weekStart,
@@ -475,6 +473,75 @@ class KpiCalculatorService {
     }
   }
 
+  async calculateChannelDailyStats(date) {
+    try {
+      logger.info(`Calculating channel daily stats for date: ${date}`)
+
+      const revenueData = await RevenueByChannel.findAll({ where: { date } })
+
+      if (revenueData.length === 0) {
+        logger.warn(`No revenue data found for date ${date}, skipping channel stats calculation`)
+        return
+      }
+
+      // Map channel names from RevenueByChannel to ChannelDailyStats format
+      const channelMapping = {
+        'cash_in': 'Cash In',
+        'cash_out': 'Cash Out',
+        'imt': 'IMT',
+        'banks': 'Banks',
+        'p2p': 'P2P',
+        'bill': 'Bill',
+        'telco': 'Telco'
+      }
+
+      const records = []
+      // Convert date string from YYYY-MM-DD to Date object
+      const dateObj = new Date(date)
+      const dayOfMonth = dateObj.getDate()
+      const month = dateObj.getMonth() + 1
+      const year = dateObj.getFullYear()
+
+      for (const revenue of revenueData) {
+        const channelName = channelMapping[revenue.channel]
+        if (!channelName) {
+          // Skip channels that don't map to ChannelDailyStats (like 'app', 'active', 'kpi-day')
+          continue
+        }
+
+        const record = {
+          date,
+          channel: channelName,
+          day_of_month: dayOfMonth,
+          month,
+          year,
+          transactions_count: revenue.transaction_count || 0,
+          amount: revenue.amount || 0,
+          revenue: revenue.revenue || 0,
+          users_count: 0, // Not available in RevenueByChannel, set to 0
+          // Set channel-specific flags
+          includes_mfs: channelName === 'IMT',
+          includes_ethub: channelName === 'IMT',
+          service_active: channelName === 'P2P'
+        }
+
+        records.push(record)
+      }
+
+      if (records.length > 0) {
+        await ChannelDailyStats.bulkCreate(records, {
+          updateOnDuplicate: ['transactions_count', 'amount', 'revenue', 'users_count']
+        })
+        logger.info(`Successfully saved ${records.length} channel daily stats records for date ${date}`)
+      } else {
+        logger.warn(`No channel daily stats records to save for date ${date}`)
+      }
+    } catch (error) {
+      logger.error(`Error calculating channel daily stats for date ${date}:`, error)
+      // Don't throw - allow import to continue even if channel stats fail
+    }
+  }
+
   groupByHourAndBusinessType(data) {
     const grouped = {}
     data.forEach(item => {
@@ -520,47 +587,71 @@ class KpiCalculatorService {
   }
 
   getWeekStartDate(dateStr) {
-    const date = new Date(
-      dateStr.substring(0, 4),
-      dateStr.substring(4, 6) - 1,
-      dateStr.substring(6, 8)
-    )
-    const day = date.getDay()
-    const diff = date.getDate() - day + (day === 0 ? -6 : 1) // Adjust for Sunday
-    const weekStart = new Date(date.setDate(diff))
+    // Handle both YYYY-MM-DD and YYYYMMDD formats
+    let date;
+    if (dateStr.includes('-')) {
+      // YYYY-MM-DD format
+      date = new Date(dateStr);
+    } else {
+      // YYYYMMDD format
+      date = new Date(
+        dateStr.substring(0, 4),
+        dateStr.substring(4, 6) - 1,
+        dateStr.substring(6, 8)
+      );
+    }
+    const day = date.getDay();
+    const diff = date.getDate() - day + (day === 0 ? -6 : 1); // Adjust for Sunday
+    const weekStart = new Date(date.setDate(diff));
 
-    const year = weekStart.getFullYear()
-    const month = String(weekStart.getMonth() + 1).padStart(2, '0')
-    const dayOfMonth = String(weekStart.getDate()).padStart(2, '0')
-    return `${year}${month}${dayOfMonth}`
+    const year = weekStart.getFullYear();
+    const month = String(weekStart.getMonth() + 1).padStart(2, '0');
+    const dayOfMonth = String(weekStart.getDate()).padStart(2, '0');
+    return `${year}-${month}-${dayOfMonth}`;
   }
 
   getWeekEndDate(weekStartStr) {
-    const date = new Date(
-      weekStartStr.substring(0, 4),
-      weekStartStr.substring(4, 6) - 1,
-      weekStartStr.substring(6, 8)
-    )
-    date.setDate(date.getDate() + 6)
+    // Handle both YYYY-MM-DD and YYYYMMDD formats
+    let date;
+    if (weekStartStr.includes('-')) {
+      // YYYY-MM-DD format
+      date = new Date(weekStartStr);
+    } else {
+      // YYYYMMDD format
+      date = new Date(
+        weekStartStr.substring(0, 4),
+        weekStartStr.substring(4, 6) - 1,
+        weekStartStr.substring(6, 8)
+      );
+    }
+    date.setDate(date.getDate() + 6);
 
-    const year = date.getFullYear()
-    const month = String(date.getMonth() + 1).padStart(2, '0')
-    const day = String(date.getDate()).padStart(2, '0')
-    return `${year}${month}${day}`
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
   getPreviousWeekStartDate(weekStartStr) {
-    const date = new Date(
-      weekStartStr.substring(0, 4),
-      weekStartStr.substring(4, 6) - 1,
-      weekStartStr.substring(6, 8)
-    )
-    date.setDate(date.getDate() - 7)
+    // Handle both YYYY-MM-DD and YYYYMMDD formats
+    let date;
+    if (weekStartStr.includes('-')) {
+      // YYYY-MM-DD format
+      date = new Date(weekStartStr);
+    } else {
+      // YYYYMMDD format
+      date = new Date(
+        weekStartStr.substring(0, 4),
+        weekStartStr.substring(4, 6) - 1,
+        weekStartStr.substring(6, 8)
+      );
+    }
+    date.setDate(date.getDate() - 7);
 
-    const year = date.getFullYear()
-    const month = String(date.getMonth() + 1).padStart(2, '0')
-    const day = String(date.getDate()).padStart(2, '0')
-    return `${year}${month}${day}`
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
   groupByBusinessType(data) {
@@ -587,16 +678,24 @@ class KpiCalculatorService {
   }
 
   getPreviousDate(dateStr) {
-    const date = new Date(
-      dateStr.substring(0, 4),
-      dateStr.substring(4, 6) - 1,
-      dateStr.substring(6, 8)
-    )
-    date.setDate(date.getDate() - 1)
-    const year = date.getFullYear()
-    const month = String(date.getMonth() + 1).padStart(2, '0')
-    const day = String(date.getDate()).padStart(2, '0')
-    return `${year}${month}${day}`
+    // Handle both YYYY-MM-DD and YYYYMMDD formats
+    let date;
+    if (dateStr.includes('-')) {
+      // YYYY-MM-DD format
+      date = new Date(dateStr);
+    } else {
+      // YYYYMMDD format
+      date = new Date(
+        dateStr.substring(0, 4),
+        dateStr.substring(4, 6) - 1,
+        dateStr.substring(6, 8)
+      );
+    }
+    date.setDate(date.getDate() - 1);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 }
 

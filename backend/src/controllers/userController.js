@@ -62,47 +62,74 @@ class UserController {
     if (userData.length === 0) {
       return {
         total: {
-          dau: 0,
-          mau: 0,
-          newUsers: 0,
-          appActivations: 0
+          clients: 0,
+          agents: 0,
+          merchants: 0,
+          new_registrations: 0,
+          app_users: 0
         },
         average: {
-          dau: 0,
-          mau: 0,
-          newUsers: 0,
-          appActivations: 0
+          clients: 0,
+          agents: 0,
+          merchants: 0,
+          new_registrations: 0,
+          app_users: 0
+        },
+        latest: {
+          clients: 0,
+          agents: 0,
+          merchants: 0,
+          new_registrations: 0,
+          app_users: 0,
+          mom_evolution: 0
         }
       }
     }
 
     const summary = {
       total: {
-        dau: 0,
-        mau: 0,
-        newUsers: 0,
-        appActivations: 0
+        clients: 0,
+        agents: 0,
+        merchants: 0,
+        new_registrations: 0,
+        app_users: 0
       },
       average: {
-        dau: 0,
-        mau: 0,
-        newUsers: 0,
-        appActivations: 0
-      }
+        clients: 0,
+        agents: 0,
+        merchants: 0,
+        new_registrations: 0,
+        app_users: 0
+      },
+      latest: null
     }
 
     userData.forEach(item => {
-      summary.total.dau += item.dau
-      summary.total.mau += item.mau
-      summary.total.newUsers += item.new_users
-      summary.total.appActivations += item.app_activations
+      summary.total.clients += item.clients || 0
+      summary.total.agents += item.agents || 0
+      summary.total.merchants += item.merchants || 0
+      summary.total.new_registrations += item.new_registrations || 0
+      summary.total.app_users += item.app_users || 0
     })
 
     const count = userData.length
-    summary.average.dau = Math.round(summary.total.dau / count)
-    summary.average.mau = Math.round(summary.total.mau / count)
-    summary.average.newUsers = Math.round(summary.total.newUsers / count)
-    summary.average.appActivations = Math.round(summary.total.appActivations / count)
+    summary.average.clients = Math.round(summary.total.clients / count)
+    summary.average.agents = Math.round(summary.total.agents / count)
+    summary.average.merchants = Math.round(summary.total.merchants / count)
+    summary.average.new_registrations = Math.round(summary.total.new_registrations / count)
+    summary.average.app_users = Math.round(summary.total.app_users / count)
+
+    // Get latest record
+    const latestRecord = userData[userData.length - 1]
+    summary.latest = {
+      date: latestRecord.date,
+      clients: latestRecord.clients || 0,
+      agents: latestRecord.agents || 0,
+      merchants: latestRecord.merchants || 0,
+      new_registrations: latestRecord.new_registrations || 0,
+      app_users: latestRecord.app_users || 0,
+      mom_evolution: latestRecord.mom_evolution || 0
+    }
 
     return summary
   }
@@ -110,11 +137,13 @@ class UserController {
   calculateUserTrends(userData) {
     return userData.map(item => ({
       date: item.date,
-      dau: item.dau,
-      mau: item.mau,
-      newUsers: item.new_users,
-      appActivations: item.app_activations,
-      retentionRate: item.mau > 0 ? (item.dau / item.mau * 100).toFixed(2) : 0
+      clients: item.clients || 0,
+      agents: item.agents || 0,
+      merchants: item.merchants || 0,
+      new_registrations: item.new_registrations || 0,
+      app_users: item.app_users || 0,
+      total_active: item.total_active || 0,
+      mom_evolution: item.mom_evolution || 0
     }))
   }
 }

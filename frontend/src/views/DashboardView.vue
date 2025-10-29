@@ -7,7 +7,7 @@
         <p class="section-subtitle">Métriques d'affaires complètes et analyses</p>
       </div>
       <div class="flex gap-3">
-        <DateSelector @dateChange="handleDateChange" />
+        <DateRangeFilter @dateChange="handleDateChange" />
         <button class="export-btn" @click="exportData">
           <IconDownload :size="18" />
           <span class="text-sm font-medium">Exporter</span>
@@ -521,7 +521,6 @@
       <!-- 9. PERFORMANCE HORAIRE -->
       <div v-show="activeTab === 'hourly'">
         <h3 class="category-title">Performance Horaire Détaillée</h3>
-
         <div v-if="hourlyData && hourlyData.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
           <KpiCard
             title="Heure de Pointe"
@@ -552,7 +551,6 @@
             iconType="customers"
           />
         </div>
-
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           <div class="chart-card">
             <h4 class="chart-title">Distribution Horaire des Transactions</h4>
@@ -563,10 +561,51 @@
             <BarChart :data="getHourlyRevenueData()" :height="300" />
           </div>
         </div>
-
         <div class="chart-card">
           <h4 class="chart-title">Évolution Horaire avec Comparaison J-1</h4>
           <LineChart :data="getHourlyComparisonData()" :height="300" />
+        </div>
+        <!-- Hourly VS/GAP, CNT/AMT/REV Comparison Table -->
+        <div v-if="hourlyComparisonData.length" class="chart-card mt-8">
+          <h4 class="chart-title mb-4">Comparaison Horaire VS/GAP, CNT/AMT/REV</h4>
+          <div class="overflow-x-auto">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Heure</th>
+                  <th>Transactions J</th>
+                  <th>Transactions J-1</th>
+                  <th>Écart (GAP)</th>
+                  <th>Montant J</th>
+                  <th>Montant J-1</th>
+                  <th>Écart Montant</th>
+                  <th>Revenus J</th>
+                  <th>Revenus J-1</th>
+                  <th>Écart Revenus</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="item in hourlyComparisonData" :key="item.hour">
+                  <td>{{ item.hour }}h</td>
+                  <td>{{ formatNumber(item.current_hour_transaction_count) }}</td>
+                  <td>{{ formatNumber(item.last_hour_transaction_count) }}</td>
+                  <td :class="item.transaction_count_gap >= 0 ? 'text-success-600' : 'text-error-600'">
+                    {{ formatNumber(item.transaction_count_gap) }}
+                  </td>
+                  <td>{{ formatCurrency(item.current_hour_amount) }}</td>
+                  <td>{{ formatCurrency(item.last_hour_amount) }}</td>
+                  <td :class="item.amount_gap >= 0 ? 'text-success-600' : 'text-error-600'">
+                    {{ formatCurrency(item.amount_gap) }}
+                  </td>
+                  <td>{{ formatCurrency(item.current_hour_revenue) }}</td>
+                  <td>{{ formatCurrency(item.last_hour_revenue) }}</td>
+                  <td :class="item.revenue_gap >= 0 ? 'text-success-600' : 'text-error-600'">
+                    {{ formatCurrency(item.revenue_gap) }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
@@ -671,7 +710,7 @@ import { ref, onMounted } from 'vue'
 import KpiCard from '@/components/widgets/KpiCard.vue'
 import LineChart from '@/components/charts/LineChart.simple.vue'
 import BarChart from '@/components/charts/BarChart.simple.vue'
-import DateSelector from '@/components/widgets/DateSelector.vue'
+import DateRangeFilter from '@/components/filters/DateRangeFilter.vue'
 import { IconDownload } from '@/components/icons/Icons.vue'
 import { apiService } from '@/services/api'
 
@@ -706,7 +745,8 @@ const channelData = ref(null)
 const usersData = ref(null)
 const revenueData = ref(null)
 const weeklyData = ref(null)
-const hourlyData = ref(null)
+const hourlyData = ref([])
+const hourlyComparisonData = ref([])
 const comparativeData = ref(null)
 
 // Mock retention cohorts (would come from API in production)
@@ -752,10 +792,8 @@ const transactionsByProductData = ref({
 const fetchAllData = async (dateParams) => {
   loading.value = true
   error.value = null
-
   try {
     const promises = []
-
     if (dateParams.date) {
       // Single date
       promises.push(
@@ -830,27 +868,19 @@ const fetchAllData = async (dateParams) => {
 
     // Fetch new KPI data
     try {
-      const [weeklyRes, hourlyRes, comparativeRes] = await Promise.all([
-        apiService.getWeeklyKpis().catch(e => {
-          console.error('Weekly KPI API error:', e)
-          return { data: null }
-        }),
-        apiService.getHourlyPerformance(new Date().toISOString().split('T')[0].replace(/-/g, '')).catch(e => {
-          console.error('Hourly KPI API error:', e)
-          return { data: null }
-        }),
-        apiService.getComparativeAnalytics(new Date().toISOString().split('T')[0].replace(/-/g, '')).catch(e => {
-          console.error('Comparative KPI API error:', e)
-          return { data: null }
-        })
+      const todayStr = new Date().toISOString().split('T')[0].replace(/-/g, '')
+      const [weeklyRes, hourlyRes, comparativeRes, hourlyCompRes] = await Promise.all([
+        apiService.getWeeklyKpis(),
+        apiService.getHourlyPerformance(todayStr),
+        apiService.getComparativeAnalytics(todayStr),
+        apiService.getHourlyComparisons ? apiService.getHourlyComparisons(todayStr) : Promise.resolve({ data: [] })
       ])
-
       weeklyData.value = weeklyRes.data
-      hourlyData.value = hourlyRes.data
+      hourlyData.value = hourlyRes.data || []
       comparativeData.value = comparativeRes.data
+      hourlyComparisonData.value = hourlyCompRes.data || []
     } catch (kpiError) {
       console.error('Error fetching new KPI data:', kpiError)
-      // Don't fail the whole load if KPI data fails
     }
 
     // Check if we have any data at all

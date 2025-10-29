@@ -1,9 +1,11 @@
+const path = require('path')
 const dailyDataIngestionJob = require('../src/jobs/dailyDataIngestion')
 const { sequelize } = require('../src/models')
 
 async function importAllDates() {
   console.log('🔄 Importing all generated data into database...\n')
 
+  const kpiDataPath = process.env.KPI_DATA_PATH || path.join(__dirname, '../kpi_data')
   const startDate = new Date('2025-07-01')
   const endDate = new Date('2025-10-22')
 

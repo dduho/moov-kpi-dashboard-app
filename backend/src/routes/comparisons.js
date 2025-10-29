@@ -1,8 +1,11 @@
 const express = require('express')
 const router = express.Router()
 const kpiController = require('../controllers/kpiController')
-const { authenticateJWT } = require('../middleware/auth')
+const { authenticateToken } = require('../middleware/auth')
 
-router.get('/', authenticateJWT, kpiController.getComparisons)
+
+router.get('/daily', authenticateToken, kpiController.getDailyComparisons)
+router.get('/hourly', authenticateToken, kpiController.getHourlyComparisons)
+router.get('/', authenticateToken, kpiController.getComparisons)
 
 module.exports = router

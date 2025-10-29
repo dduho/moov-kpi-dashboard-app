@@ -14,7 +14,7 @@ const { DailyKpi } = require('../models')
 class DailyDataIngestionJob {
   constructor() {
     // Use absolute path to kpi_data directory (mounted volume in Docker, relative path locally)
-    this.tempDir = process.env.KPI_DATA_PATH || path.join(__dirname, '../../../kpi_data')
+    this.tempDir = process.env.KPI_DATA_PATH || path.join(__dirname, '../../kpi_data')
     this.processedDates = new Set() // Track processed dates in memory
     this.ensureTempDir()
   }
@@ -255,17 +255,15 @@ class DailyDataIngestionJob {
       await excelParserService.parseAllFiles(dateFolderPath, date)
       logger.info('Parsed all Excel files')
 
-      // 3. Calculate aggregated KPIs (TEMPORARILY DISABLED - causes blocking issues with HourlyPerformance and ComparativeAnalytics)
-      // logger.info('Calculating aggregated KPIs...')
-      // await kpiCalculatorService.calculateDailyAggregates(date)
-      // logger.info('Calculated aggregated KPIs')
-      logger.info('Skipping aggregated KPIs calculation (disabled)')
+      // 3. Calculate aggregated KPIs
+      logger.info('Calculating aggregated KPIs...')
+      await kpiCalculatorService.calculateDailyAggregates(date)
+      logger.info('Calculated aggregated KPIs')
 
-      // 4. Clear cache (TEMPORARILY DISABLED - Redis connection causes blocking)
-      // logger.info('Clearing cache...')
-      // await cacheService.clearAll()
-      // logger.info('Cleared cache')
-      logger.info('Skipping cache clearing (disabled)')
+      // 4. Clear cache
+      logger.info('Clearing cache...')
+      await cacheService.clearAll()
+      logger.info('Cleared cache')
 
       logger.info(`Successfully completed data ingestion for date: ${date}`)
     } catch (error) {

@@ -5,20 +5,30 @@
         <h2 class="section-title">Transactions IMT</h2>
         <p class="section-subtitle">Analyses des transferts d'argent internationaux</p>
       </div>
-      <button class="export-btn">
-        <IconDownload :size="18" />
-        <span class="text-sm font-medium">Exporter</span>
+      <div class="flex gap-3">
+        <DateRangeFilter @dateChange="handleDateChange" />
+        <button class="export-btn" @click="exportData">
+          <IconDownload :size="18" />
+          <span class="text-sm font-medium">Exporter</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div v-if="loading" class="loading-container">
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
+      <p class="mt-4 text-gray-600">Chargement des données IMT...</p>
+    </div>
+
+    <!-- Error State -->
+    <div v-else-if="error" class="error-container">
+      <div class="text-error-600 mb-4">
+        <p class="font-semibold">Erreur lors du chargement des données</p>
+        <p class="text-sm mt-2">{{ error }}</p>
+      </div>
+      <button @click="retry" class="glass-btn">
+        <span class="text-sm font-medium">Réessayer</span>
       </button>
-    </div>
-
-    <!-- Loading state -->
-    <div v-if="loading" class="flex items-center justify-center py-12">
-      <div class="text-gray-500">Chargement des données IMT...</div>
-    </div>
-
-    <!-- Error state -->
-    <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-      <p class="text-red-800">Erreur: {{ error }}</p>
     </div>
 
     <!-- Data display -->
@@ -66,7 +76,13 @@
       </div>
 
       <div class="chart-card">
-        <h3 class="chart-title mb-4">Détails des Transactions IMT</h3>
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="chart-title">Détails des Transactions IMT</h3>
+          <div class="search-container-sm">
+            <IconSearch :size="16" class="search-icon-sm" />
+            <input type="text" placeholder="Rechercher..." class="search-input-sm" v-model="searchQuery" />
+          </div>
+        </div>
         <div class="overflow-x-auto">
           <table class="data-table">
             <thead>
@@ -82,7 +98,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="txn in transactions" :key="`${txn.date}-${txn.country}-${txn.imt_business}`">
+              <tr v-for="txn in filteredTransactions" :key="`${txn.date}-${txn.country}-${txn.imt_business}`">
                 <td class="font-medium">{{ formatDisplayDate(txn.date) }}</td>
                 <td>{{ txn.country }}</td>
                 <td>{{ txn.imt_business }}</td>
@@ -105,15 +121,18 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import KpiCard from '@/components/widgets/KpiCard.vue'
 import BarChart from '@/components/charts/BarChart.simple.vue'
-import { IconDownload } from '@/components/icons/Icons.vue'
+import DateRangeFilter from '@/components/filters/DateRangeFilter.vue'
+import { IconDownload, IconSearch } from '@/components/icons/Icons.vue'
 import { apiService } from '@/services/api'
 
 const loading = ref(true)
 const error = ref(null)
+const searchQuery = ref('')
 const transactions = ref([])
+const currentDateParams = ref({})
 const imtKpis = ref({
   totalTransactions: 0,
   transactionsTrend: 0,
@@ -142,17 +161,29 @@ const businessDistributionData = ref({
   }]
 })
 
-const fetchImtData = async () => {
+const fetchImtData = async (dateParams) => {
   try {
     loading.value = true
     error.value = null
+    currentDateParams.value = dateParams || currentDateParams.value
 
-    // Get last 30 days of data
-    const endDate = new Date()
-    const startDate = new Date()
-    startDate.setDate(startDate.getDate() - 30)
+    // Extract date parameters
+    let startDate, endDate
+    if (dateParams?.date) {
+      startDate = dateParams.date
+      endDate = dateParams.date
+    } else if (dateParams?.start_date && dateParams?.end_date) {
+      startDate = dateParams.start_date
+      endDate = dateParams.end_date
+    } else {
+      // Default: yesterday
+      const yesterday = new Date()
+      yesterday.setDate(yesterday.getDate() - 1)
+      startDate = formatDateForAPI(yesterday)
+      endDate = startDate
+    }
 
-    const response = await apiService.getImtData(formatDateForAPI(endDate))
+    const response = await apiService.getImtData(startDate, endDate)
     const data = response.data
 
     if (data && data.length > 0) {
@@ -228,16 +259,60 @@ const fetchImtData = async () => {
   }
 }
 
-onMounted(() => {
-  fetchImtData()
+const handleDateChange = (dateParams) => {
+  fetchImtData(dateParams)
+}
+
+const retry = () => {
+  fetchImtData(currentDateParams.value)
+}
+
+const exportData = async () => {
+  try {
+    const response = await apiService.exportToExcel(currentDateParams.value)
+    const url = window.URL.createObjectURL(new Blob([response.data]))
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', `imt-transactions-${new Date().toISOString().split('T')[0]}.xlsx`)
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+  } catch (err) {
+    console.error('Export error:', err)
+  }
+}
+
+const filteredTransactions = computed(() => {
+  if (!searchQuery.value) return transactions.value
+  const query = searchQuery.value.toLowerCase()
+  return transactions.value.filter(txn =>
+    txn.country?.toLowerCase().includes(query) ||
+    txn.imt_business?.toLowerCase().includes(query) ||
+    txn.date?.includes(query)
+  )
 })
 
-const formatNumber = (value) => new Intl.NumberFormat('en-US').format(value)
-const formatCurrency = (value) => new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'XOF',
-  minimumFractionDigits: 0
-}).format(value)
+onMounted(() => {
+  // Load yesterday by default
+  const yesterday = new Date()
+  yesterday.setDate(yesterday.getDate() - 1)
+  const dateStr = yesterday.toISOString().split('T')[0].replace(/-/g, '')
+  fetchImtData({ date: dateStr })
+})
+
+const formatNumber = (value) => {
+  if (!value && value !== 0) return '0'
+  return new Intl.NumberFormat('fr-FR').format(Math.round(value))
+}
+
+const formatCurrency = (value) => {
+  if (!value && value !== 0) return 'XOF 0'
+  return new Intl.NumberFormat('fr-FR', {
+    style: 'currency',
+    currency: 'XOF',
+    minimumFractionDigits: 0
+  }).format(value)
+}
 
 const formatDateForAPI = (date) => {
   const d = new Date(date)
@@ -266,5 +341,17 @@ const getSuccessRateClass = (rate) => {
 </script>
 
 <style scoped>
+.loading-container {
+  @apply flex flex-col items-center justify-center py-24;
+}
+
+.error-container {
+  @apply flex flex-col items-center justify-center py-24;
+  background: rgba(254, 242, 242, 0.5);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 1rem;
+  padding: 2rem;
+}
+
 @import './views-styles.css';
 </style>

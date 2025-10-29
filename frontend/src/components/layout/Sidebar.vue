@@ -93,6 +93,12 @@ const menuItems = [
     permission: 'dashboard:view'
   },
   {
+    path: '/analytics',
+    label: 'Analytics Avancés',
+    icon: IconBadgeCheck,
+    permission: 'analytics:view'
+  },
+  {
     path: '/daily-kpis',
     label: 'KPI Journaliers',
     icon: IconLeaderboard,

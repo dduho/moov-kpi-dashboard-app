@@ -10,6 +10,7 @@ import ReportsView from '../views/ReportsView.vue'
 import LoginView from '../views/LoginView.vue'
 import ProfileView from '../views/ProfileView.vue'
 import SettingsView from '../views/SettingsView.vue'
+import AnalyticsView from '../views/AnalyticsView.vue'
 
 const routes = [
   {
@@ -23,6 +24,12 @@ const routes = [
     name: 'Dashboard',
     component: DashboardView,
     meta: { requiresAuth: true, permission: 'dashboard:view' }
+  },
+  {
+    path: '/analytics',
+    name: 'Analytics',
+    component: AnalyticsView,
+    meta: { requiresAuth: true, permission: 'analytics:view' }
   },
   {
     path: '/daily-kpis',

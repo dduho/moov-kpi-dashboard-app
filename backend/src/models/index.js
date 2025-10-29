@@ -29,6 +29,12 @@ const KpiComparisons = require('./KpiComparisons')(sequelize, DataTypes)
 const WeeklyKpis = require('./WeeklyKpis')(sequelize, DataTypes)
 const HourlyPerformance = require('./HourlyPerformance')(sequelize, DataTypes)
 const ComparativeAnalytics = require('./ComparativeAnalytics')(sequelize, DataTypes)
+const ImtCountryStats = require('./ImtCountryStats')(sequelize, DataTypes)
+const ImtBalances = require('./ImtBalances')(sequelize, DataTypes)
+const YearlyComparison = require('./YearlyComparison')(sequelize, DataTypes)
+const HourlyComparison = require('./HourlyComparison')(sequelize, DataTypes)
+const DailyComparison = require('./DailyComparison')(sequelize, DataTypes)
+const ChannelDailyStats = require('./ChannelDailyStats')(sequelize, DataTypes)
 
 // Define relationships
 // User <-> Role (Many-to-Many)
@@ -75,5 +81,11 @@ module.exports = {
   KpiAggregates,
   WeeklyKpis,
   HourlyPerformance,
-  ComparativeAnalytics
+  ComparativeAnalytics,
+  ImtCountryStats,
+  ImtBalances,
+  YearlyComparison,
+  HourlyComparison,
+  DailyComparison,
+  ChannelDailyStats
 }

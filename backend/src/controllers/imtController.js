@@ -4,8 +4,31 @@ const cacheService = require('../services/cacheService')
 class ImtController {
   async getImtData(req, res, next) {
     try {
-      const { date } = req.query
-      const cacheKey = `imt-data:${date}`
+      const { date, start_date, end_date } = req.query
+
+      // Support both single date and date range
+      let whereClause = {}
+      let cacheKey = ''
+
+      if (date) {
+        whereClause = { date }
+        cacheKey = `imt-data:${date}`
+      } else if (start_date && end_date) {
+        const { Op } = require('sequelize')
+        whereClause = {
+          date: {
+            [Op.between]: [start_date, end_date]
+          }
+        }
+        cacheKey = `imt-data:${start_date}-${end_date}`
+      } else if (start_date) {
+        whereClause = { date: start_date }
+        cacheKey = `imt-data:${start_date}`
+      } else {
+        return res.status(400).json({
+          error: 'Missing date parameter. Please provide either "date" or "start_date" and "end_date"'
+        })
+      }
 
       const cachedData = await cacheService.get(cacheKey)
       if (cachedData) {
@@ -13,8 +36,8 @@ class ImtController {
       }
 
       const imtData = await ImtTransaction.findAll({
-        where: { date },
-        order: [['country', 'ASC'], ['imt_business', 'ASC']]
+        where: whereClause,
+        order: [['date', 'ASC'], ['country', 'ASC'], ['imt_business', 'ASC']]
       })
 
       await cacheService.set(cacheKey, imtData, 300)

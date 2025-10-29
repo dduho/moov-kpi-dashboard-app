@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api'
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -212,6 +212,47 @@ export const apiService = {
       params: {
         start_date: formatDate(startDate),
         end_date: formatDate(endDate)
+      }
+    })
+  },
+
+  // Advanced Analytics APIs
+  getPerformanceDashboard(date) {
+    return apiClient.get('/analytics/performance-dashboard', {
+      params: { date: formatDate(date) }
+    })
+  },
+
+  getTrendAnalysis(startDate, endDate, metric = 'revenue') {
+    return apiClient.get('/analytics/trend-analysis', {
+      params: {
+        start_date: formatDate(startDate),
+        end_date: formatDate(endDate),
+        metric
+      }
+    })
+  },
+
+  getPredictiveInsights(daysAhead = 7) {
+    return apiClient.get('/analytics/predictive-insights', {
+      params: { days_ahead: daysAhead }
+    })
+  },
+
+  getChannelPerformanceAnalysis(startDate, endDate) {
+    return apiClient.get('/analytics/channel-performance', {
+      params: {
+        start_date: formatDate(startDate),
+        end_date: formatDate(endDate)
+      }
+    })
+  },
+
+  getYearOverYearComparison(year, compareWithYear) {
+    return apiClient.get('/analytics/year-over-year', {
+      params: {
+        year,
+        ...(compareWithYear && { compare_with_year: compareWithYear })
       }
     })
   }

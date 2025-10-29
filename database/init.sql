@@ -122,7 +122,52 @@ CREATE TABLE IF NOT EXISTS comparative_analytics (
     UNIQUE(date, business_type)
 );
 
--- Insérer quelques données de test
-INSERT INTO users (username, email, hashed_password) VALUES
-('admin', 'admin@moov.ci', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LeCt1uB0Y4I5J3l6e') -- password: admin123
-ON CONFLICT (username) DO NOTHING;
+-- Table des transactions IMT (modifiée avec channel et hour)
+CREATE TABLE IF NOT EXISTS imt_transactions (
+    id SERIAL PRIMARY KEY,
+    date DATE NOT NULL,
+    country VARCHAR(50),
+    imt_business VARCHAR(50),
+    channel VARCHAR(50) NOT NULL, -- ETHUB_SEND, ETHUB_RECV, MFS_SEND, MFS_RECV
+    hour INTEGER, -- 0-23 for hourly data, null for daily
+    total_success INTEGER,
+    total_failed INTEGER,
+    amount DECIMAL(20,2), -- In millions XOF
+    revenue DECIMAL(20,2), -- In thousands XOF
+    commission DECIMAL(20,2), -- In thousands XOF
+    tax DECIMAL(20,2), -- In thousands XOF
+    success_rate DECIMAL(5,4),
+    balance DECIMAL(20,2), -- In millions XOF
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(date, country, imt_business, channel, hour)
+);
+
+-- Table des statistiques IMT par pays
+CREATE TABLE IF NOT EXISTS imt_country_stats (
+    id SERIAL PRIMARY KEY,
+    date DATE NOT NULL,
+    country VARCHAR(50) NOT NULL,
+    direction VARCHAR(10) NOT NULL CHECK (direction IN ('RECEIVE', 'SEND')),
+    hub_type VARCHAR(10) NOT NULL CHECK (hub_type IN ('ETHUB', 'MFS')),
+    count INTEGER DEFAULT 0,
+    amount DECIMAL(20,2) DEFAULT 0, -- In millions XOF
+    revenue DECIMAL(20,2) DEFAULT 0, -- In thousands XOF
+    commission DECIMAL(20,2) DEFAULT 0, -- In thousands XOF
+    tax DECIMAL(20,2) DEFAULT 0, -- In thousands XOF
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(date, country, direction, hub_type)
+);
+
+-- Table des soldes IMT
+CREATE TABLE IF NOT EXISTS imt_balances (
+    id SERIAL PRIMARY KEY,
+    date DATE NOT NULL,
+    country VARCHAR(50) NOT NULL,
+    ethub_receive_balance DECIMAL(20,2) DEFAULT 0, -- In millions XOF
+    ethub_send_balance DECIMAL(20,2) DEFAULT 0, -- In millions XOF
+    mfs_receive_balance DECIMAL(20,2) DEFAULT 0, -- In millions XOF
+    mfs_send_balance DECIMAL(20,2) DEFAULT 0, -- In millions XOF
+    balance_status VARCHAR(20) DEFAULT 'Healthy' CHECK (balance_status IN ('Healthy', 'Warning', 'Critical')),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(date, country)
+);

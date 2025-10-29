@@ -1,7 +1,34 @@
-const { DailyKpi, HourlyKpi, WeeklyKpis, ActiveUsers, HourlyPerformance, ComparativeAnalytics } = require('../models')
+const { DailyKpi, HourlyKpi, WeeklyKpis, ActiveUsers, HourlyPerformance, ComparativeAnalytics, YearlyComparison, ChannelDailyStats } = require('../models')
 const cacheService = require('../services/cacheService')
 
 class KpiController {
+  async getDailyComparisons(req, res, next) {
+    try {
+      const { start_date, end_date } = req.query
+      const where = {}
+      if (start_date && end_date) {
+        where.date = { [require('sequelize').Op.between]: [start_date, end_date] }
+      }
+      const data = await require('../models').DailyComparison.findAll({ where, order: [['date', 'ASC']] })
+      res.json(data)
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  async getHourlyComparisons(req, res, next) {
+    try {
+      const { start_date, end_date } = req.query
+      const where = {}
+      if (start_date && end_date) {
+        where.date = { [require('sequelize').Op.between]: [start_date, end_date] }
+      }
+      const data = await require('../models').HourlyComparison.findAll({ where, order: [['date', 'ASC'], ['hour', 'ASC']] })
+      res.json(data)
+    } catch (error) {
+      next(error)
+    }
+  }
   async getDailyKpis(req, res, next) {
     try {
       const { date } = req.query
@@ -340,6 +367,143 @@ class KpiController {
 
       await cacheService.set(cacheKey, analytics, 300)
       res.json(analytics)
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  async getYearlyComparisons(req, res, next) {
+    try {
+      const { year, metric_type, category } = req.query
+      const cacheKey = `yearly-comparisons:${year}:${metric_type || 'all'}:${category || 'all'}`
+
+      const cachedData = await cacheService.get(cacheKey)
+      if (cachedData) {
+        return res.json(cachedData)
+      }
+
+      const data = await YearlyComparison.findByYear(year, metric_type)
+
+      await cacheService.set(cacheKey, data, 300)
+      res.json(data)
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  async getYearlyTrends(req, res, next) {
+    try {
+      const { year, metric_type = 'revenue' } = req.query
+      const cacheKey = `yearly-trends:${year}:${metric_type}`
+
+      const cachedData = await cacheService.get(cacheKey)
+      if (cachedData) {
+        return res.json(cachedData)
+      }
+
+      const trends = await YearlyComparison.getYearlyTrends(year, metric_type)
+
+      await cacheService.set(cacheKey, trends, 300)
+      res.json(trends)
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  async getMonthlyYearlyComparison(req, res, next) {
+    try {
+      const { year, month, metric_type } = req.query
+      const cacheKey = `monthly-yearly-comparison:${year}:${month}:${metric_type || 'all'}`
+
+      const cachedData = await cacheService.get(cacheKey)
+      if (cachedData) {
+        return res.json(cachedData)
+      }
+
+      const data = await YearlyComparison.findByMonth(year, month, metric_type)
+
+      await cacheService.set(cacheKey, data, 300)
+      res.json(data)
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  async getChannelDailyStats(req, res, next) {
+    try {
+      const { channel, start_date, end_date } = req.query
+      let cacheKey, stats
+
+      if (channel && start_date && end_date) {
+        cacheKey = `channel-daily-stats:${channel}:${start_date}-${end_date}`
+        const cachedData = await cacheService.get(cacheKey)
+        if (cachedData) {
+          return res.json(cachedData)
+        }
+
+        stats = await ChannelDailyStats.findByChannel(channel, start_date, end_date)
+      } else if (start_date && end_date) {
+        cacheKey = `channel-daily-stats:all:${start_date}-${end_date}`
+        const cachedData = await cacheService.get(cacheKey)
+        if (cachedData) {
+          return res.json(cachedData)
+        }
+
+        stats = await ChannelDailyStats.findByDateRange(start_date, end_date)
+      } else {
+        // Get latest channel stats
+        cacheKey = 'channel-daily-stats:latest'
+        const cachedData = await cacheService.get(cacheKey)
+        if (cachedData) {
+          return res.json(cachedData)
+        }
+
+        stats = await ChannelDailyStats.findAll({
+          order: [['date', 'DESC'], ['channel', 'ASC']],
+          limit: 50 // Last 50 records across all channels
+        })
+      }
+
+      await cacheService.set(cacheKey, stats, 300)
+      res.json(stats)
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  async getChannelMonthlyStats(req, res, next) {
+    try {
+      const { year, month, channel } = req.query
+      const cacheKey = `channel-monthly-stats:${year}:${month}:${channel || 'all'}`
+
+      const cachedData = await cacheService.get(cacheKey)
+      if (cachedData) {
+        return res.json(cachedData)
+      }
+
+      const stats = await ChannelDailyStats.getMonthlyStats(year, month, channel)
+
+      await cacheService.set(cacheKey, stats, 300)
+      res.json(stats)
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  async getChannelComparison(req, res, next) {
+    try {
+      const { start_date, end_date } = req.query
+      const cacheKey = `channel-comparison:${start_date}-${end_date}`
+
+      const cachedData = await cacheService.get(cacheKey)
+      if (cachedData) {
+        return res.json(cachedData)
+      }
+
+      const comparison = await ChannelDailyStats.getChannelComparison(start_date, end_date)
+
+      await cacheService.set(cacheKey, comparison, 300)
+      res.json(comparison)
     } catch (error) {
       next(error)
     }
